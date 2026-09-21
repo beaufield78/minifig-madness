@@ -277,7 +277,7 @@
     </div>
 
     <script>
-       const REBRICKABLE_API_KEY = "957742eb812482095aa04ae021b16dcf";
+      const REBRICKABLE_API_KEY = "957742eb812482095aa04ae021b16dcf";
 
         // Global State variables
         let searchResults = [];
@@ -287,17 +287,6 @@
         let queryTimer = null;
         let qrScannerInstance = null;
 
-        // CMF Matrix barcode factory dictionary mappings
-        const cmfDecoderDatabase = {
-            "6471968": { id: "col25-1", name: "Film Noir Detective" },
-            "6471969": { id: "col25-2", name: "E-Sports Gamer" },
-            "6471970": { id: "col25-3", name: "Vampire Knight" },
-            "6492349": { id: "col26-1", name: "Space Walking Astronaut" },
-            "6492351": { id: "col26-3", name: "Alien Tourist" },
-            "6501704": { id: "coldnd-1", name: "Dwarf Barbarian" },
-            "6501711": { id: "coldnd-8", name: "Mind Flayer" }
-        };
-
         // --- Live Rebrickable REST API Connector ---
         async function queryCatalogDatabase(searchQuery) {
             if (!searchQuery.trim()) { renderUI(); return; }
@@ -305,17 +294,15 @@
             grid.innerHTML = '<div class="loading-text">Searching global database...</div>';
 
             const nativeUrl = `https://rebrickable.com{REBRICKABLE_API_KEY}&search=${encodeURIComponent(searchQuery)}&page_size=28`;
+            // AUTOMATED FIX: Using a highly resilient proxy node layout that unpacks data layers instantly
             const proxyEndpoint = `https://allorigins.win{encodeURIComponent(nativeUrl)}`;
 
             try {
                 const response = await fetch(proxyEndpoint);
                 const data = await response.json();
                 
-                // FIXED: Direct payload verification check handles object string or raw data arrays safely
-                let payload = data;
-                if (data && data.body) {
-                    payload = typeof data.body === 'string' ? JSON.parse(data.body) : data.body;
-                }
+                // Unpack the proxy shell string safely back into an active data object array
+                const payload = typeof data.contents === 'string' ? JSON.parse(data.contents) : data.contents;
 
                 searchResults = (payload.results || []).map(fig => ({
                     id: fig.set_num,
@@ -326,7 +313,7 @@
                 }));
                 renderUI();
             } catch (err) {
-                grid.innerHTML = '<div class="loading-text" style="color:var(--danger)">Connection bottleneck. Pulling local device cache files instead...</div>';
+                grid.innerHTML = '<div class="loading-text" style="color:var(--danger)">Connection bottleneck. Pulling local device memory cache instead...</div>';
                 searchResults = ownedVault.filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()) || item.id.toLowerCase().includes(searchQuery.toLowerCase()));
                 renderUI();
             }
@@ -374,11 +361,7 @@
             try {
                 const res = await fetch(proxyPartsUrl);
                 const data = await res.json();
-                
-                let payload = data;
-                if (data && data.body) {
-                    payload = typeof data.body === 'string' ? JSON.parse(data.body) : data.body;
-                }
+                const payload = typeof data.contents === 'string' ? JSON.parse(data.contents) : data.contents;
                 
                 if(!payload.results || payload.results.length === 0) {
                     elementContainer.innerHTML = "No distinct replacement part listings cataloged for this item.";
@@ -492,36 +475,41 @@
             
             qrScannerInstance.start(
                 { facingMode: "environment" },
-                { fps: 6, qrbox: { width: 250, height: 250 } },
+                // AUTOMATED FIX: Reduced framework check speeds to allow hardware auto-focus to scan accurately
+                { fps: 4, qrbox: { width: 220, height: 220 } },
                 (decodedText) => { stopScanner(); processScannedToken(decodedText); },
                 () => { }
-            ).catch(err => alert("Camera blocked. Please access this website using a normal Safari or Chrome browser tab."));
+            ).catch(err => alert("Camera blocked. Verify permissions inside iOS Safari system settings."));
         }
 
         function stopScanner() {
-            if(qrScannerInstance) {
+             if(qrScannerInstance) {
                 qrScannerInstance.stop().then(() => {
                     document.getElementById('scanner-block').style.display = "none";
                 }).catch(() => {});
             }
         }
 
-        function processScannedToken(tokenText) {
-            const parsedCleanToken = tokenText.trim().replace(/[^0-9]/g, '').substring(0, 7);
+        // --- Future-Proof Automated CMF Box Code Parser Logic ---
+        async function processScannedToken(tokenText) {
+            const textString = tokenText.trim();
+            const segments = textString.split(/\s+/);
+            
+            let targetSearchQuery = textString;
 
-            if (cmfDecoderDatabase[parsedCleanToken]) {
-                const mapInfo = cmfDecoderDatabase[parsedCleanToken];
-                const mockItem = {
-                    id: mapInfo.id,
-                    name: mapInfo.name,
-                    image: `https://rebrickable.com{mapInfo.id}.png`,
-                    num_parts: 5,
-                    userValue: 0
-                };
-                launchModalView(mockItem);
-            } else {
-                document.getElementById('search').value = tokenText;
-                queryCatalogDatabase(tokenText);
+            const numericExtractor = textString.replace(/[^0-9]/g, '');
+            if (numericExtractor.length >= 7) {
+                const subId = numericExtractor.substring(0, 7);
+                targetSearchQuery = subId;
+            } else if (segments.length > 0) {
+                targetSearchQuery = segments[0];
+            }
+
+            document.getElementById('search').value = targetSearchQuery;
+            await queryCatalogDatabase(targetSearchQuery);
+
+            if (searchResults.length > 0) {
+                launchModalView(searchResults[0]);
             }
         }
 
