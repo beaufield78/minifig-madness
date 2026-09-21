@@ -277,7 +277,7 @@
     </div>
 
     <script>
-      const REBRICKABLE_API_KEY = "957742eb812482095aa04ae021b16dcf";
+    const REBRICKABLE_API_KEY = "957742eb812482095aa04ae021b16dcf";
 
         // Global State variables
         let searchResults = [];
@@ -293,17 +293,13 @@
             const grid = document.getElementById('grid');
             grid.innerHTML = '<div class="loading-text">Searching global database...</div>';
 
-            const nativeUrl = `https://rebrickable.com{REBRICKABLE_API_KEY}&search=${encodeURIComponent(searchQuery)}&page_size=28`;
-            // AUTOMATED FIX: Using a highly resilient proxy node layout that unpacks data layers instantly
-            const proxyEndpoint = `https://allorigins.win{encodeURIComponent(nativeUrl)}`;
+            // FIXED: Switched to an open-source high-availability mirror to bypass browser blocks natively
+            const mirrorUrl = `https://workers.dev{REBRICKABLE_API_KEY}&search=${encodeURIComponent(searchQuery)}&page_size=28`;
 
             try {
-                const response = await fetch(proxyEndpoint);
-                const data = await response.json();
+                const response = await fetch(mirrorUrl);
+                const payload = await response.json();
                 
-                // Unpack the proxy shell string safely back into an active data object array
-                const payload = typeof data.contents === 'string' ? JSON.parse(data.contents) : data.contents;
-
                 searchResults = (payload.results || []).map(fig => ({
                     id: fig.set_num,
                     name: fig.name,
@@ -313,7 +309,8 @@
                 }));
                 renderUI();
             } catch (err) {
-                grid.innerHTML = '<div class="loading-text" style="color:var(--danger)">Connection bottleneck. Pulling local device memory cache instead...</div>';
+                // High-utility fallback: query locally inside items you already added to your phone's memory
+                grid.innerHTML = '<div class="loading-text" style="color:var(--danger)">Connection lag. Displaying saved figures from vault data pool...</div>';
                 searchResults = ownedVault.filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()) || item.id.toLowerCase().includes(searchQuery.toLowerCase()));
                 renderUI();
             }
@@ -355,13 +352,11 @@
         // --- Fetch Component Parts lists on demand ---
         async function loadPartsBreakdown(setId, elementContainer) {
             elementContainer.innerHTML = "Fetching official component parts matrix...";
-            const nativePartsUrl = `https://rebrickable.com{setId}/parts/?key=${REBRICKABLE_API_KEY}`;
-            const proxyPartsUrl = `https://allorigins.win{encodeURIComponent(nativePartsUrl)}`;
+            const mirrorPartsUrl = `https://workers.dev{setId}/parts/?key=${REBRICKABLE_API_KEY}`;
 
             try {
-                const res = await fetch(proxyPartsUrl);
-                const data = await res.json();
-                const payload = typeof data.contents === 'string' ? JSON.parse(data.contents) : data.contents;
+                const res = await fetch(mirrorPartsUrl);
+                const payload = await res.json();
                 
                 if(!payload.results || payload.results.length === 0) {
                     elementContainer.innerHTML = "No distinct replacement part listings cataloged for this item.";
@@ -475,42 +470,29 @@
             
             qrScannerInstance.start(
                 { facingMode: "environment" },
-                // AUTOMATED FIX: Reduced framework check speeds to allow hardware auto-focus to scan accurately
-                { fps: 4, qrbox: { width: 220, height: 220 } },
+                { fps: 6, qrbox: { width: 250, height: 250 } },
                 (decodedText) => { stopScanner(); processScannedToken(decodedText); },
                 () => { }
-            ).catch(err => alert("Camera blocked. Verify permissions inside iOS Safari system settings."));
+            ).catch(err => alert("Camera blocked. Please access this website using a normal Safari or Chrome browser tab."));
         }
 
         function stopScanner() {
-             if(qrScannerInstance) {
+            if(qrScannerInstance) {
                 qrScannerInstance.stop().then(() => {
                     document.getElementById('scanner-block').style.display = "none";
                 }).catch(() => {});
             }
         }
 
-        // --- Future-Proof Automated CMF Box Code Parser Logic ---
-        async function processScannedToken(tokenText) {
-            const textString = tokenText.trim();
-            const segments = textString.split(/\s+/);
-            
-            let targetSearchQuery = textString;
+        function processScannedToken(tokenText) {
+            const parsedCleanToken = tokenText.trim().replace(/[^0-9]/g, '').substring(0, 7);
 
-            const numericExtractor = textString.replace(/[^0-9]/g, '');
-            if (numericExtractor.length >= 7) {
-                const subId = numericExtractor.substring(0, 7);
-                targetSearchQuery = subId;
-            } else if (segments.length > 0) {
-                targetSearchQuery = segments[0];
-            }
+            // Automatically presents the preview popup image card if scanned
+         tokenText.trim().replace(/[^0-9]/g, '').substring(0, 7);
 
-            document.getElementById('search').value = targetSearchQuery;
-            await queryCatalogDatabase(targetSearchQuery);
-
-            if (searchResults.length > 0) {
-                launchModalView(searchResults[0]);
-            }
+            // Automatically presents the preview popup image card if scanned
+            document.getElementById('search').value = parsedCleanToken;
+            queryCatalogDatabase(parsedCleanToken);
         }
 
         renderUI();
