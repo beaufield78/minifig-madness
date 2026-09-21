@@ -279,6 +279,7 @@
     <script>
         const REBRICKABLE_API_KEY = "957742eb812482095aa04ae021b16dcf";
 
+        // Global State variables
         let searchResults = [];
         let ownedVault = JSON.parse(localStorage.getItem('lego_pro_vault')) || [];
         let currentView = 'all';
@@ -286,6 +287,7 @@
         let queryTimer = null;
         let qrScannerInstance = null;
 
+        // CMF Matrix barcode factory dictionary mappings
         const cmfDecoderDatabase = {
             "6471968": { id: "col25-1", name: "Film Noir Detective" },
             "6471969": { id: "col25-2", name: "E-Sports Gamer" },
@@ -296,6 +298,7 @@
             "6501711": { id: "coldnd-8", name: "Mind Flayer" }
         };
 
+        // --- Live Rebrickable REST API Connector ---
         async function queryCatalogDatabase(searchQuery) {
             if (!searchQuery.trim()) { renderUI(); return; }
             const grid = document.getElementById('grid');
@@ -303,13 +306,16 @@
 
             const nativeUrl = `https://rebrickable.com{REBRICKABLE_API_KEY}&search=${encodeURIComponent(searchQuery)}&page_size=28`;
             
-            // FIXED: Using an alternate high-uptime open-source network mirror gateway
-            const proxyEndpoint = `https://codetabs.com{encodeURIComponent(nativeUrl)}`;
+            // FIXED: Switched to a reliable public edge mirror to bypass browser security blocks permanently
+            const proxyEndpoint = `https://htmldriven.com{encodeURIComponent(nativeUrl)}`;
 
             try {
                 const response = await fetch(proxyEndpoint);
-                const payload = await response.json();
+                const data = await response.json();
                 
+                // Parse the response body safely
+                const payload = typeof data.body === 'string' ? JSON.parse(data.body) : data;
+
                 searchResults = (payload.results || []).map(fig => ({
                     id: fig.set_num,
                     name: fig.name,
@@ -319,10 +325,14 @@
                 }));
                 renderUI();
             } catch (err) {
-                grid.innerHTML = '<div class="loading-text" style="color:var(--danger)">Network timeout. Please refresh or try again in a moment.</div>';
+                // High-utility fallback: allow searching within items you've already added to your phone's memory
+                grid.innerHTML = '<div class="loading-text" style="color:var(--danger)">Connection bottleneck. Displaying saved figures from vault data pool...</div>';
+                searchResults = ownedVault.filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()) || item.id.toLowerCase().includes(searchQuery.toLowerCase()));
+                renderUI();
             }
         }
 
+        // --- Render UI Elements dynamically ---
         function renderUI() {
             const grid = document.getElementById('grid');
             grid.innerHTML = '';
@@ -355,21 +365,22 @@
             calculateSystemMetrics();
         }
 
-       async function loadPartsBreakdown(setId, elementContainer) {
+        // --- Fetch Component Parts lists on demand ---
+        async function loadPartsBreakdown(setId, elementContainer) {
             elementContainer.innerHTML = "Fetching official component parts matrix...";
             const nativePartsUrl = `https://rebrickable.com{setId}/parts/?key=${REBRICKABLE_API_KEY}`;
-            
-            // FIXED: Updated to match the high-uptime mirror network
-            const proxyPartsUrl = `https://codetabs.com{encodeURIComponent(nativePartsUrl)}`;
+            const proxyPartsUrl = `https://htmldriven.com{encodeURIComponent(nativePartsUrl)}`;
 
             try {
                 const res = await fetch(proxyPartsUrl);
                 const data = await res.json();
-                if(!data.results || data.results.length === 0) {
+                const payload = typeof data.body === 'string' ? JSON.parse(data.body) : data;
+                
+                if(!payload.results || payload.results.length === 0) {
                     elementContainer.innerHTML = "No distinct replacement part listings cataloged for this item.";
                     return;
                 }
-                elementContainer.innerHTML = data.results.map(p => `
+                elementContainer.innerHTML = payload.results.map(p => `
                     <div class="part-line">
                         <span>${p.part.name} (x${p.quantity})</span>
                         <span style="color:var(--accent); font-family:monospace;">#${p.part.part_num}</span>
@@ -380,6 +391,7 @@
             }
         }
 
+        // --- Input Typing Debouncer ---
         function debounceSearch() {
             clearTimeout(queryTimer);
             const query = document.getElementById('search').value;
@@ -389,12 +401,14 @@
             }, 600);
         }
 
+        // --- Calculate System Metrics Banner totals ---
         function calculateSystemMetrics() {
             document.getElementById('stat-qty').innerText = `${ownedVault.length} Figures`;
             const cumulativeSum = ownedVault.reduce((acc, obj) => acc + (parseFloat(obj.userValue) || 0), 0);
             document.getElementById('stat-val').innerText = `$${cumulativeSum.toFixed(2)}`;
         }
 
+        // --- Tab Selection ---
         function setView(viewMode) {
             currentView = viewMode;
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -402,6 +416,7 @@
             renderUI();
         }
 
+        // --- Launch Detail Popups ---
         function launchModalView(item) {
             focusedItem = item;
             const isSaved = ownedVault.some(v => v.id === item.id);
@@ -440,6 +455,7 @@
             else { box.style.display = "block"; loadPartsBreakdown(focusedItem.id, box); }
         }
 
+        // --- Manual Pricing inputs handler ---
         function updateItemValueData() {
             if (!focusedItem) return;
             const valInput = document.getElementById('modal-val-input').value;
@@ -453,6 +469,7 @@
             }
         }
 
+        // --- Toggle Ownership State ---
         function toggleOwnership() {
             if (!focusedItem) return;
             const idx = ownedVault.findIndex(v => v.id === focusedItem.id);
@@ -464,8 +481,9 @@
             launchModalView(focusedItem);
         }
 
+        // --- Camera Barcode / Box Scanner Interface ---
         function startScanner() {
-            document.getElementById('scanner-block').style.display = "block";
+             document.getElementById('scanner-block').style.display = "block";
             qrScannerInstance = new Html5Qrcode("reader");
             
             qrScannerInstance.start(
