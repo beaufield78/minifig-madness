@@ -5,11 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Minifig Madness Pro</title>
     
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-    <!-- QR/DataMatrix Engine Library -->
-    <script src="https://unpkg.com" type="text/javascript"></script>
+    <!-- FIXED: Removed PWA meta tags to prevent iOS from locking camera permissions -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
     <style>
         :root {
@@ -41,7 +38,6 @@
             margin: 0 0 15px 0;
             color: var(--accent);
             font-weight: 800;
-            letter-spacing: -0.5px;
         }
 
         .stats-banner {
@@ -59,7 +55,7 @@
         }
 
         .stat-box { text-align: center; }
-        .stat-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+        .stat-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 6px; }
         .stat-value { font-size: 24px; font-weight: 800; }
         .stat-value.qty { color: var(--blue); }
         .stat-value.val { color: var(--success); }
@@ -81,10 +77,7 @@
             color: var(--text);
             font-size: 16px;
             outline: none;
-            transition: all 0.2s ease;
         }
-
-        .search-input:focus { border-color: var(--blue); }
 
         .scan-btn {
             padding: 0 20px;
@@ -93,7 +86,7 @@
             border: none;
             border-radius: 14px;
             font-weight: bold;
-            font-size: 18px;
+            font-size: 16px;
             cursor: pointer;
         }
 
@@ -109,7 +102,7 @@
         }
 
         #reader { width: 100% !important; border: none !important; }
-        .close-scan { width: 100%; padding: 14px; background: #222; color: #fff; border: none; font-weight: bold; cursor: pointer; }
+        .close-scan { width: 100%; padding: 14px; background: #222; color: #fff; border: none; font-weight: bold; }
 
         .filter-container {
             display: flex;
@@ -127,8 +120,8 @@
             border-radius: 25px;
             color: var(--text-secondary);
             font-weight: 600;
-            cursor: pointer;
             text-align: center;
+            cursor: pointer;
         }
 
         .filter-btn.active {
@@ -152,7 +145,6 @@
             text-align: center;
             cursor: pointer;
             border: 2px solid transparent;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .minifig-card img {
@@ -161,7 +153,6 @@
             object-fit: contain;
             filter: grayscale(100%);
             opacity: 0.35;
-            transition: all 0.3s ease;
         }
 
         .minifig-card.owned img { filter: grayscale(0%); opacity: 1; }
@@ -178,9 +169,9 @@
             justify-content: center;
             align-items: center;
             opacity: 0; pointer-events: none;
-            transition: opacity 0.2s ease;
             z-index: 9999;
             padding: 16px;
+            transition: opacity 0.2s ease;
         }
 
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
@@ -200,36 +191,29 @@
 
         .preview-card img { width: 140px; height: 140px; object-fit: contain; margin-bottom: 12px; }
         .preview-card img.greyscale { filter: grayscale(100%); opacity: 0.4; }
-
-        .preview-card h2 { font-size: 22px; margin: 0 0 6px 0; font-weight: 700; }
+        .preview-card h2 { font-size: 22px; margin: 0 0 6px 0; }
         .preview-card p { color: var(--text-secondary); font-size: 13px; margin: 0 0 15px 0; }
 
         .badge-row { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }
         .badge { padding: 6px 12px; font-size: 12px; border-radius: 8px; font-weight: bold; background: #252530; color: #fff; }
         .badge.pc { color: var(--blue); }
-        .badge.val { color: var(--success); }
 
-        .val-input-group {
-            margin-bottom: 20px;
-            text-align: left;
-        }
+        .val-input-group { margin-bottom: 20px; text-align: left; }
         .val-input-group label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; }
         .val-input { width: 100%; padding: 12px; background: var(--input-bg); border: 1px solid #444; border-radius: 10px; color: #fff; font-size: 16px; box-sizing: border-box; }
 
-        .parts-btn { width: 100%; padding: 12px; background: #252530; border: 1px solid #444; color: #fff; border-radius: 12px; font-weight: 600; cursor: pointer; margin-bottom: 15px; transition: background 0.2s; }
-        .parts-btn.value-lookup { background: var(--bricklink-blue); border-color: #00599c; color: #fff; }
-        .parts-btn.value-lookup:hover { background: #005394; }
+        .parts-btn { width: 100%; padding: 12px; background: #252530; border: 1px solid #444; color: #fff; border-radius: 12px; font-weight: 600; cursor: pointer; margin-bottom: 15px; }
+        .parts-btn.value-lookup { background: var(--bricklink-blue); border-color: #00599c; }
         
         .parts-box { display: none; background: #0f0f12; border-radius: 12px; padding: 12px; text-align: left; margin-bottom: 15px; max-height: 200px; overflow-y: auto; font-size: 13px; border: 1px solid #333; }
         .part-line { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #222; }
-        .part-line:last-child { border-bottom: none; }
 
         .action-btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 8px; }
         .action-btn.add { background: var(--success); color: #000; }
         .action-btn.remove { background: var(--danger); color: #fff; }
         .action-btn.close { background: #333; color: #fff; }
 
-        .loading-text { grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 4px; }
+        .loading-text { grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 20px; }
     </style>
 </head>
 <body>
@@ -272,7 +256,7 @@
             <h2 id="modal-name">Minifigure Name</h2>
             <p id="modal-id">ID: sw0001</p>
             
-    <div class="badge-row">
+            <div class="badge-row">
                 <span class="badge pc" id="modal-parts-count">0 Parts</span>
             </div>
 
@@ -284,19 +268,17 @@
                 <label>Market Value ($ USD)</label>
                 <input type="number" id="modal-val-input" class="val-input" placeholder="0.00" oninput="updateItemValueData()">
             </div>
-
-            <button class="parts-btn" onclick="togglePartsBreakdown()">🔍 View Component Parts List</button>
+  <button class="parts-btn" onclick="togglePartsBreakdown()">🔍 View Component Parts List</button>
             <div class="parts-box" id="parts-wrapper">Loading inventory...</div>
 
             <button id="modal-action-btn" class="action-btn" onclick="toggleOwnership()">Add to Collection</button>
             <button class="action-btn close" onclick="closeModal()">Close</button>
         </div>
     </div>
-<script>
-     // FIXED: Using the unlimited Cors.sh delivery network proxy mapping
+
+    <script>
         const REBRICKABLE_API_KEY = "957742eb812482095aa04ae021b16dcf";
 
-        // Global State variables
         let searchResults = [];
         let ownedVault = JSON.parse(localStorage.getItem('lego_pro_vault')) || [];
         let currentView = 'all';
@@ -304,7 +286,6 @@
         let queryTimer = null;
         let qrScannerInstance = null;
 
-        // CMF Matrix barcode factory dictionary mappings
         const cmfDecoderDatabase = {
             "6471968": { id: "col25-1", name: "Film Noir Detective" },
             "6471969": { id: "col25-2", name: "E-Sports Gamer" },
@@ -315,20 +296,16 @@
             "6501711": { id: "coldnd-8", name: "Mind Flayer" }
         };
 
-        // --- Live Rebrickable REST API Connector ---
         async function queryCatalogDatabase(searchQuery) {
             if (!searchQuery.trim()) { renderUI(); return; }
             const grid = document.getElementById('grid');
             grid.innerHTML = '<div class="loading-text">Searching global database...</div>';
 
             const nativeUrl = `https://rebrickable.com{REBRICKABLE_API_KEY}&search=${encodeURIComponent(searchQuery)}&page_size=28`;
-            // FIXED: Using a fast, high-availability public gateway proxy routing address
-            const proxyEndpoint = `https://cors.sh{nativeUrl}`;
+            const proxyEndpoint = `https://allorigins.win{encodeURIComponent(nativeUrl)}`;
 
             try {
-                const response = await fetch(proxyEndpoint, {
-                    headers: { 'x-cors-api-key': 'temp_83b63901b0f19c3b77ba72166a4bc2bd' }
-                });
+                const response = await fetch(proxyEndpoint);
                 const payload = await response.json();
                 
                 searchResults = (payload.results || []).map(fig => ({
@@ -340,11 +317,10 @@
                 }));
                 renderUI();
             } catch (err) {
-                grid.innerHTML = '<div class="loading-text" style="color:var(--danger)">Connection Error. Pulling local cache data instead...</div>';
+                grid.innerHTML = '<div class="loading-text" style="color:var(--danger)">Network glitch. Make sure you are viewing inside standard Safari/Chrome tabs, not a Home Bookmark panel.</div>';
             }
         }
 
-        // --- Render UI Elements dynamically ---
         function renderUI() {
             const grid = document.getElementById('grid');
             grid.innerHTML = '';
@@ -377,16 +353,13 @@
             calculateSystemMetrics();
         }
 
-        // --- Fetch Component Parts lists on demand ---
         async function loadPartsBreakdown(setId, elementContainer) {
             elementContainer.innerHTML = "Fetching official component parts matrix...";
             const nativePartsUrl = `https://rebrickable.com{setId}/parts/?key=${REBRICKABLE_API_KEY}`;
-            const proxyPartsUrl = `https://cors.sh{nativePartsUrl}`;
+            const proxyPartsUrl = `https://allorigins.win{encodeURIComponent(nativePartsUrl)}`;
 
             try {
-                const res = await fetch(proxyPartsUrl, {
-                    headers: { 'x-cors-api-key': 'temp_83b63901b0f19c3b77ba72166a4bc2bd' }
-                });
+                const res = await fetch(proxyPartsUrl);
                 const data = await res.json();
                 if(!data.results || data.results.length === 0) {
                     elementContainer.innerHTML = "No distinct replacement part listings cataloged for this item.";
@@ -399,11 +372,10 @@
                     </div>
                 `).join('');
             } catch(e) {
-                elementContainer.innerHTML = "Failed to load parts breakdown via proxy.";
+                elementContainer.innerHTML = "Failed to load parts breakdown.";
             }
         }
 
-        // --- Input Typing Debouncer ---
         function debounceSearch() {
             clearTimeout(queryTimer);
             const query = document.getElementById('search').value;
@@ -413,14 +385,12 @@
             }, 600);
         }
 
-        // --- Calculate System Metrics Banner totals ---
         function calculateSystemMetrics() {
             document.getElementById('stat-qty').innerText = `${ownedVault.length} Figures`;
             const cumulativeSum = ownedVault.reduce((acc, obj) => acc + (parseFloat(obj.userValue) || 0), 0);
             document.getElementById('stat-val').innerText = `$${cumulativeSum.toFixed(2)}`;
         }
 
-        // --- Tab Selection ---
         function setView(viewMode) {
             currentView = viewMode;
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -428,7 +398,6 @@
             renderUI();
         }
 
-        // --- Launch Detail Popups ---
         function launchModalView(item) {
             focusedItem = item;
             const isSaved = ownedVault.some(v => v.id === item.id);
@@ -463,15 +432,10 @@
 
         function togglePartsBreakdown() {
             const box = document.getElementById('parts-wrapper');
-            if (box.style.display === "block") {
-                box.style.display = "none";
-            } else {
-                box.style.display = "block";
-                loadPartsBreakdown(focusedItem.id, box);
-            }
+            if (box.style.display === "block") { box.style.display = "none"; } 
+            else { box.style.display = "block"; loadPartsBreakdown(focusedItem.id, box); }
         }
 
-        // --- Manual Pricing inputs handler ---
         function updateItemValueData() {
             if (!focusedItem) return;
             const valInput = document.getElementById('modal-val-input').value;
@@ -485,38 +449,27 @@
             }
         }
 
-        // --- Toggle Ownership State ---
         function toggleOwnership() {
             if (!focusedItem) return;
             const idx = ownedVault.findIndex(v => v.id === focusedItem.id);
 
-            if(idx > -1) {
-                ownedVault.splice(idx, 1);
-            } else {
-                if(!focusedItem.userValue) focusedItem.userValue = 0;
-                ownedVault.push(focusedItem);
-            }
-            localStorage.setItem('lego_vault_db', JSON.stringify(ownedVault));
+            if(idx > -1) { ownedVault.splice(idx, 1); } 
+            else { if(!focusedItem.userValue) focusedItem.userValue = 0; ownedVault.push(focusedItem); }
             localStorage.setItem('lego_pro_vault', JSON.stringify(ownedVault));
             renderUI();
             launchModalView(focusedItem);
         }
 
-        // --- Camera Barcode / Box Scanner Interface ---
         function startScanner() {
             document.getElementById('scanner-block').style.display = "block";
             qrScannerInstance = new Html5Qrcode("reader");
             
             qrScannerInstance.start(
-           { facingMode: "environment" },
-                // FIXED: Lowered resolution frame evaluation speed to allow hardware auto-focus to engage cleanly
+                { facingMode: "environment" },
                 { fps: 6, qrbox: { width: 250, height: 250 } },
-                (decodedText) => {
-                    stopScanner();
-                    processScannedToken(decodedText);
-                },
-                () => { /* Quiet evaluation loop */ }
-            ).catch(err => alert("Camera permission rejected. Turn it on in iOS Safari Settings."));
+                (decodedText) => { stopScanner(); processScannedToken(decodedText); },
+                () => { }
+            ).catch(err => alert("Camera blocked. Please access this website using a normal Safari or Chrome browser tab."));
         }
 
         function stopScanner() {
@@ -527,9 +480,7 @@
             }
         }
 
-        // --- Decode token and launch pre-purchase verification card ---
         function processScannedToken(tokenText) {
-            // FIXED: Isolates the raw 7-digit item code out of complex factory strings
             const parsedCleanToken = tokenText.trim().replace(/[^0-9]/g, '').substring(0, 7);
 
             if (cmfDecoderDatabase[parsedCleanToken]) {
@@ -543,7 +494,6 @@
                 };
                 launchModalView(mockItem);
             } else {
-                // If it's a standard QR or barcode, type it straight into search
                 document.getElementById('search').value = tokenText;
                 queryCatalogDatabase(tokenText);
             }
@@ -552,4 +502,4 @@
         renderUI();
     </script>
 </body>
-</html>     
+</html>
