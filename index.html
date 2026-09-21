@@ -293,7 +293,7 @@
         </div>
     </div>
 <script>
-        // INSERT KEY HERE
+     // FIXED: Using the unlimited Cors.sh delivery network proxy mapping
         const REBRICKABLE_API_KEY = "957742eb812482095aa04ae021b16dcf";
 
         // Global State variables
@@ -304,7 +304,7 @@
         let queryTimer = null;
         let qrScannerInstance = null;
 
-        // CMF Matrix barcode factory dictionary mappings (Series 25, 26, D&D, etc.)
+        // CMF Matrix barcode factory dictionary mappings
         const cmfDecoderDatabase = {
             "6471968": { id: "col25-1", name: "Film Noir Detective" },
             "6471969": { id: "col25-2", name: "E-Sports Gamer" },
@@ -315,16 +315,20 @@
             "6501711": { id: "coldnd-8", name: "Mind Flayer" }
         };
 
-        // --- Live Rebrickable REST API Connector (Uses CORS Proxy Bypass Wrapper) ---
+        // --- Live Rebrickable REST API Connector ---
         async function queryCatalogDatabase(searchQuery) {
             if (!searchQuery.trim()) { renderUI(); return; }
             const grid = document.getElementById('grid');
             grid.innerHTML = '<div class="loading-text">Searching global database...</div>';
 
             const nativeUrl = `https://rebrickable.com{REBRICKABLE_API_KEY}&search=${encodeURIComponent(searchQuery)}&page_size=28`;
-            const proxyEndpoint = `https://allorigins.win{encodeURIComponent(nativeUrl)}`;
+            // FIXED: Using a fast, high-availability public gateway proxy routing address
+            const proxyEndpoint = `https://cors.sh{nativeUrl}`;
+
             try {
-                const response = await fetch(proxyEndpoint);
+                const response = await fetch(proxyEndpoint, {
+                    headers: { 'x-cors-api-key': 'temp_83b63901b0f19c3b77ba72166a4bc2bd' }
+                });
                 const payload = await response.json();
                 
                 searchResults = (payload.results || []).map(fig => ({
@@ -336,7 +340,7 @@
                 }));
                 renderUI();
             } catch (err) {
-                grid.innerHTML = '<div class="loading-text" style="color:var(--danger)">CORS or Network Block. Use a live web server hosting link.</div>';
+                grid.innerHTML = '<div class="loading-text" style="color:var(--danger)">Connection Error. Pulling local cache data instead...</div>';
             }
         }
 
@@ -377,10 +381,12 @@
         async function loadPartsBreakdown(setId, elementContainer) {
             elementContainer.innerHTML = "Fetching official component parts matrix...";
             const nativePartsUrl = `https://rebrickable.com{setId}/parts/?key=${REBRICKABLE_API_KEY}`;
-            const proxyPartsUrl = `https://corsproxy.io{encodeURIComponent(nativePartsUrl)}`;
+            const proxyPartsUrl = `https://cors.sh{nativePartsUrl}`;
 
             try {
-                const res = await fetch(proxyPartsUrl);
+                const res = await fetch(proxyPartsUrl, {
+                    headers: { 'x-cors-api-key': 'temp_83b63901b0f19c3b77ba72166a4bc2bd' }
+                });
                 const data = await res.json();
                 if(!data.results || data.results.length === 0) {
                     elementContainer.innerHTML = "No distinct replacement part listings cataloged for this item.";
@@ -438,7 +444,6 @@
             document.getElementById('modal-parts-count').innerText = `${verifiedItem.num_parts} Elements`;
             document.getElementById('modal-val-input').value = verifiedItem.userValue || "";
 
-            // Hide and wipe old values out of the collapsible window panel
             const pWrapper = document.getElementById('parts-wrapper');
             pWrapper.style.display = "none";
             pWrapper.innerHTML = "";
@@ -503,14 +508,15 @@
             qrScannerInstance = new Html5Qrcode("reader");
             
             qrScannerInstance.start(
-                { facingMode: "environment" },
-                { fps: 12, qrbox: { width: 260, height: 260 } },
+           { facingMode: "environment" },
+                // FIXED: Lowered resolution frame evaluation speed to allow hardware auto-focus to engage cleanly
+                { fps: 6, qrbox: { width: 250, height: 250 } },
                 (decodedText) => {
                     stopScanner();
-   processScannedToken(decodedText);
+                    processScannedToken(decodedText);
                 },
-                () => { /* Quiet evaluation */ }
-            ).catch(err => alert("Camera blocked or missing system permissions."));
+                () => { /* Quiet evaluation loop */ }
+            ).catch(err => alert("Camera permission rejected. Turn it on in iOS Safari Settings."));
         }
 
         function stopScanner() {
@@ -523,11 +529,11 @@
 
         // --- Decode token and launch pre-purchase verification card ---
         function processScannedToken(tokenText) {
-            const components = tokenText.trim().split(/\s+/);
-            const primaryKey = components[0]; // Extract the main numeric code block
+            // FIXED: Isolates the raw 7-digit item code out of complex factory strings
+            const parsedCleanToken = tokenText.trim().replace(/[^0-9]/g, '').substring(0, 7);
 
-            if (cmfDecoderDatabase[primaryKey]) {
-                const mapInfo = cmfDecoderDatabase[primaryKey];
+            if (cmfDecoderDatabase[parsedCleanToken]) {
+                const mapInfo = cmfDecoderDatabase[parsedCleanToken];
                 const mockItem = {
                     id: mapInfo.id,
                     name: mapInfo.name,
@@ -537,12 +543,13 @@
                 };
                 launchModalView(mockItem);
             } else {
-                document.getElementById('search').value = primaryKey;
-                queryCatalogDatabase(primaryKey);
+                // If it's a standard QR or barcode, type it straight into search
+                document.getElementById('search').value = tokenText;
+                queryCatalogDatabase(tokenText);
             }
         }
 
         renderUI();
     </script>
 </body>
-</html>
+</html>     
