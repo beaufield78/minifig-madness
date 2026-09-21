@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Minifig Madness Pro</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- QR/DataMatrix Engine Library -->
+    <script src="https://unpkg.com" type="text/javascript"></script>
+
+    <style>
+        :root {
+            --bg: #0f0f12;
+            --card-bg: #1c1c24;
+            --accent: #ffd700;
+            --text: #ffffff;
+            --input-bg: #252530;
+            --text-secondary: #9aa0a6;
+            --danger: #ff4444;
+            --success: #00e676;
+            --blue: #29b6f6;
+            --bricklink-blue: #00457c;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px 16px 60px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin: 0 0 15px 0;
+            color: var(--accent);
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .stats-banner {
+            width: 100%;
+            max-width: 500px;
+            background: linear-gradient(135deg, #1c1c24, #2a2a38);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-around;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            border: 1px solid #333344;
+            box-sizing: border-box;
+        }
+
+        .stat-box { text-align: center; }
+        .stat-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+        .stat-value { font-size: 24px; font-weight: 800; }
+        .stat-value.qty { color: var(--blue); }
+        .stat-value.val { color: var(--success); }
+
+        .controls-container {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 16px;
+            background-color: var(--input-bg);
+            border: 2px solid transparent;
+            border-radius: 14px;
+            color: var(--text);
+            font-size: 16px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .search-input:focus { border-color: var(--blue); }
+
+        .scan-btn {
+            padding: 0 20px;
+            background-color: var(--accent);
+            color: #000;
+            border: none;
+            border-radius: 14px;
+            font-weight: bold;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .scanner-view {
+            width: 100%;
+            max-width: 500px;
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            display: none;
+            border: 2px solid var(--accent);
+        }
+
+        #reader { width: 100% !important; border: none !important; }
+        .close-scan { width: 100%; padding: 14px; background: #222; color: #fff; border: none; font-weight: bold; cursor: pointer; }
+
+        .filter-container {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 25px;
+        }
+
+        .filter-btn {
+            flex: 1;
+            padding: 12px;
+            background-color: var(--card-bg);
+            border: 1px solid #333344;
+            border-radius: 25px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .filter-btn.active {
+            background-color: var(--blue);
+            color: #fff;
+            border-color: var(--blue);
+        }
+
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 16px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .minifig-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 14px;
+            text-align: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .minifig-card img {
+            width: 110px;
+            height: 110px;
+            object-fit: contain;
+            filter: grayscale(100%);
+            opacity: 0.35;
+            transition: all 0.3s ease;
+        }
+
+        .minifig-card.owned img { filter: grayscale(0%); opacity: 1; }
+        .minifig-card.owned { border-color: rgba(0, 230, 118, 0.2); }
+
+        .minifig-card .name { font-size: 14px; font-weight: 600; margin-top: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .minifig-card .id { font-size: 11px; color: var(--text-secondary); font-family: monospace; margin-top: 4px; }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.2s ease;
+            z-index: 9999;
+            padding: 16px;
+        }
+
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+        .preview-card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 24px;
+            width: 100%;
+            max-width: 360px;
+            max-height: 85vh;
+            overflow-y: auto;
+            text-align: center;
+            border: 2px solid #333344;
+            box-sizing: border-box;
+        }
+
+        .preview-card img { width: 140px; height: 140px; object-fit: contain; margin-bottom: 12px; }
+        .preview-card img.greyscale { filter: grayscale(100%); opacity: 0.4; }
+
+        .preview-card h2 { font-size: 22px; margin: 0 0 6px 0; font-weight: 700; }
+        .preview-card p { color: var(--text-secondary); font-size: 13px; margin: 0 0 15px 0; }
+
+        .badge-row { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }
+        .badge { padding: 6px 12px; font-size: 12px; border-radius: 8px; font-weight: bold; background: #252530; color: #fff; }
+        .badge.pc { color: var(--blue); }
+        .badge.val { color: var(--success); }
+
+        .val-input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .val-input-group label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; }
+        .val-input { width: 100%; padding: 12px; background: var(--input-bg); border: 1px solid #444; border-radius: 10px; color: #fff; font-size: 16px; box-sizing: border-box; }
+
+        .parts-btn { width: 100%; padding: 12px; background: #252530; border: 1px solid #444; color: #fff; border-radius: 12px; font-weight: 600; cursor: pointer; margin-bottom: 15px; transition: background 0.2s; }
+        .parts-btn.value-lookup { background: var(--bricklink-blue); border-color: #00599c; color: #fff; }
+        .parts-btn.value-lookup:hover { background: #005394; }
+        
+        .parts-box { display: none; background: #0f0f12; border-radius: 12px; padding: 12px; text-align: left; margin-bottom: 15px; max-height: 200px; overflow-y: auto; font-size: 13px; border: 1px solid #333; }
+        .part-line { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #222; }
+        .part-line:last-child { border-bottom: none; }
+
+        .action-btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 8px; }
+        .action-btn.add { background: var(--success); color: #000; }
+        .action-btn.remove { background: var(--danger); color: #fff; }
+        .action-btn.close { background: #333; color: #fff; }
+
+        .loading-text { grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 4px; }
+    </style>
+</head>
+<body>
+
+    <h1>Minifig Madness</h1>
+    
+    <div class="stats-banner">
+        <div class="stat-box">
+            <div class="stat-label">Vault Total</div>
+            <div class="stat-value qty" id="stat-qty">0 Figs</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">Est. Value</div>
+            <div class="stat-value val" id="stat-val">$0.00</div>
+        </div>
+    </div>
+
+    <div class="controls-container">
+        <input type="text" id="search" class="search-input" placeholder="Search entire catalog (Vader, sw0001)..." oninput="debounceSearch()">
+        <button class="scan-btn" onclick="startScanner()">📷 Box Scan</button>
+    </div>
+
+    <div class="scanner-view" id="scanner-block">
+        <div id="reader"></div>
+        <button class="close-scan" onclick="stopScanner()">Close Scanner</button>
+    </div>
+
+    <div class="filter-container">
+        <div class="filter-btn active" id="view-all" onclick="setView('all')">Search Database</div>
+        <div class="filter-btn" id="view-owned" onclick="setView('owned')">My Vault</div>
+    </div>
+
+    <div id="grid">
+        <div class="loading-text">Type keywords to look up any figure...</div>
+    </div>
+
+    <div class="modal-overlay" id="modal" onclick="closeModal()">
+        <div class="preview-card" onclick="event.stopPropagation()">
+            <img id="modal-img" src="" alt="">
+            <h2 id="modal-name">Minifigure Name</h2>
+            <p id="modal-id">ID: sw0001</p>
+            
+    <div class="badge-row">
+                <span class="badge pc" id="modal-parts-count">0 Parts</span>
+            </div>
+
+            <button class="parts-btn value-lookup" onclick="window.open('https://bricklink.com' + encodeURIComponent(focusedItem.id), '_blank')">
+                🌐 Look Up Market Value on BrickLink
+            </button>
+
+            <div class="val-input-group">
+                <label>Market Value ($ USD)</label>
+                <input type="number" id="modal-val-input" class="val-input" placeholder="0.00" oninput="updateItemValueData()">
+            </div>
+
+            <button class="parts-btn" onclick="togglePartsBreakdown()">🔍 View Component Parts List</button>
+            <div class="parts-box" id="parts-wrapper">Loading inventory...</div>
+
+            <button id="modal-action-btn" class="action-btn" onclick="toggleOwnership()">Add to Collection</button>
+            <button class="action-btn close" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+<script>
+        // INSERT KEY HERE
+        const REBRICKABLE_API_KEY = "957742eb812482095aa04ae021b16dcf";
+
+        // Global State variables
+        let searchResults = [];
+        let ownedVault = JSON.parse(localStorage.getItem('lego_pro_vault')) || [];
+        let currentView = 'all';
+        let focusedItem = null;
+        let queryTimer = null;
+        let qrScannerInstance = null;
+
+        // CMF Matrix barcode factory dictionary mappings (Series 25, 26, D&D, etc.)
+        const cmfDecoderDatabase = {
+            "6471968": { id: "col25-1", name: "Film Noir Detective" },
+            "6471969": { id: "col25-2", name: "E-Sports Gamer" },
+            "6471970": { id: "col25-3", name: "Vampire Knight" },
+            "6492349": { id: "col26-1", name: "Space Walking Astronaut" },
+            "6492351": { id: "col26-3", name: "Alien Tourist" },
+            "6501704": { id: "coldnd-1", name: "Dwarf Barbarian" },
+            "6501711": { id: "coldnd-8", name: "Mind Flayer" }
+        };
+
+        // --- Live Rebrickable REST API Connector (Uses CORS Proxy Bypass Wrapper) ---
+        async function queryCatalogDatabase(searchQuery) {
+            if (!searchQuery.trim()) { renderUI(); return; }
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '<div class="loading-text">Searching global database...</div>';
+
+            const nativeUrl = `https://rebrickable.com{REBRICKABLE_API_KEY}&search=${encodeURIComponent(searchQuery)}&page_size=28`;
+            const proxyEndpoint = `https://corsproxy.io{encodeURIComponent(nativeUrl)}`;
+
+            try {
+                const response = await fetch(proxyEndpoint);
+                const payload = await response.json();
+                
+                searchResults = (payload.results || []).map(fig => ({
+                    id: fig.set_num,
+                    name: fig.name,
+                    image: fig.set_img_url || 'https://placeholder.com',
+                    num_parts: fig.num_parts || 4,
+                    userValue: 0
+                }));
+                renderUI();
+            } catch (err) {
+                grid.innerHTML = '<div class="loading-text" style="color:var(--danger)">CORS or Network Block. Use a live web server hosting link.</div>';
+            }
+        }
+
+        // --- Render UI Elements dynamically ---
+        function renderUI() {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+            let targetArray = currentView === 'owned' ? ownedVault : searchResults;
+
+            if (targetArray.length === 0) {
+                grid.innerHTML = currentView === 'owned' 
+                    ? '<div class="loading-text">Your collection vault is empty. Search items to populate it!</div>'
+                    : '<div class="loading-text">Type keywords above to query the LEGO master database...</div>';
+                calculateSystemMetrics();
+                return;
+            }
+
+            targetArray.forEach(item => {
+                const isSaved = ownedVault.some(v => v.id === item.id);
+                const matchedSavedItem = ownedVault.find(v => v.id === item.id);
+                const displayItem = matchedSavedItem || item;
+
+                const card = document.createElement('div');
+                card.className = `minifig-card ${isSaved ? 'owned' : ''}`;
+                card.onclick = () => launchModalView(displayItem);
+
+                card.innerHTML = `
+                    <img src="${displayItem.image}" alt="${displayItem.name}">
+                    <div class="name">${displayItem.name}</div>
+                    <div class="id">${displayItem.id.toUpperCase()}</div>
+                `;
+                grid.appendChild(card);
+            });
+            calculateSystemMetrics();
+        }
+
+        // --- Fetch Component Parts lists on demand ---
+        async function loadPartsBreakdown(setId, elementContainer) {
+            elementContainer.innerHTML = "Fetching official component parts matrix...";
+            const nativePartsUrl = `https://rebrickable.com{setId}/parts/?key=${REBRICKABLE_API_KEY}`;
+            const proxyPartsUrl = `https://corsproxy.io{encodeURIComponent(nativePartsUrl)}`;
+
+            try {
+                const res = await fetch(proxyPartsUrl);
+                const data = await res.json();
+                if(!data.results || data.results.length === 0) {
+                    elementContainer.innerHTML = "No distinct replacement part listings cataloged for this item.";
+                    return;
+                }
+                elementContainer.innerHTML = data.results.map(p => `
+                    <div class="part-line">
+                        <span>${p.part.name} (x${p.quantity})</span>
+                        <span style="color:var(--accent); font-family:monospace;">#${p.part.part_num}</span>
+                    </div>
+                `).join('');
+            } catch(e) {
+                elementContainer.innerHTML = "Failed to load parts breakdown via proxy.";
+            }
+        }
+
+        // --- Input Typing Debouncer ---
+        function debounceSearch() {
+            clearTimeout(queryTimer);
+            const query = document.getElementById('search').value;
+            queryTimer = setTimeout(() => {
+                if (currentView === 'owned') renderUI();
+                else queryCatalogDatabase(query);
+            }, 600);
+        }
+
+        // --- Calculate System Metrics Banner totals ---
+        function calculateSystemMetrics() {
+            document.getElementById('stat-qty').innerText = `${ownedVault.length} Figures`;
+            const cumulativeSum = ownedVault.reduce((acc, obj) => acc + (parseFloat(obj.userValue) || 0), 0);
+            document.getElementById('stat-val').innerText = `$${cumulativeSum.toFixed(2)}`;
+        }
+
+        // --- Tab Selection ---
+        function setView(viewMode) {
+            currentView = viewMode;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`view-${viewMode}`).classList.add('active');
+            renderUI();
+        }
+
+        // --- Launch Detail Popups ---
+        function launchModalView(item) {
+            focusedItem = item;
+            const isSaved = ownedVault.some(v => v.id === item.id);
+            const verifiedItem = ownedVault.find(v => v.id === item.id) || item;
+
+            const mImg = document.getElementById('modal-img');
+            mImg.src = verifiedItem.image;
+            if (isSaved) mImg.classList.remove('greyscale');
+            else mImg.classList.add('greyscale');
+
+            document.getElementById('modal-name').innerText = verifiedItem.name;
+            document.getElementById('modal-id').innerText = `Catalog Reference: ${verifiedItem.id.toUpperCase()}`;
+            document.getElementById('modal-parts-count').innerText = `${verifiedItem.num_parts} Elements`;
+            document.getElementById('modal-val-input').value = verifiedItem.userValue || "";
+
+            // Hide and wipe old values out of the collapsible window panel
+            const pWrapper = document.getElementById('parts-wrapper');
+            pWrapper.style.display = "none";
+            pWrapper.innerHTML = "";
+
+            const aBtn = document.getElementById('modal-action-btn');
+            if(isSaved) {
+                aBtn.innerText = "Remove from Collection";
+                aBtn.className = "action-btn remove";
+            } else {
+                aBtn.innerText = "Add to Collection";
+                aBtn.className = "action-btn add";
+            }
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function closeModal() { document.getElementById('modal').classList.remove('active'); }
+
+        function togglePartsBreakdown() {
+            const box = document.getElementById('parts-wrapper');
+            if (box.style.display === "block") {
+                box.style.display = "none";
+            } else {
+                box.style.display = "block";
+                loadPartsBreakdown(focusedItem.id, box);
+            }
+        }
+
+        // --- Manual Pricing inputs handler ---
+        function updateItemValueData() {
+            if (!focusedItem) return;
+            const valInput = document.getElementById('modal-val-input').value;
+            focusedItem.userValue = parseFloat(valInput) || 0;
+            
+            const internalIdx = ownedVault.findIndex(v => v.id === focusedItem.id);
+            if (internalIdx > -1) {
+                ownedVault[internalIdx].userValue = focusedItem.userValue;
+                localStorage.setItem('lego_pro_vault', JSON.stringify(ownedVault));
+                calculateSystemMetrics();
+            }
+        }
+
+        // --- Toggle Ownership State ---
+        function toggleOwnership() {
+            if (!focusedItem) return;
+            const idx = ownedVault.findIndex(v => v.id === focusedItem.id);
+
+            if(idx > -1) {
+                ownedVault.splice(idx, 1);
+            } else {
+                if(!focusedItem.userValue) focusedItem.userValue = 0;
+                ownedVault.push(focusedItem);
+            }
+            localStorage.setItem('lego_vault_db', JSON.stringify(ownedVault));
+            localStorage.setItem('lego_pro_vault', JSON.stringify(ownedVault));
+            renderUI();
+            launchModalView(focusedItem);
+        }
+
+        // --- Camera Barcode / Box Scanner Interface ---
+        function startScanner() {
+            document.getElementById('scanner-block').style.display = "block";
+            qrScannerInstance = new Html5Qrcode("reader");
+            
+            qrScannerInstance.start(
+                { facingMode: "environment" },
+                { fps: 12, qrbox: { width: 260, height: 260 } },
+                (decodedText) => {
+                    stopScanner();
+   processScannedToken(decodedText);
+                },
+                () => { /* Quiet evaluation */ }
+            ).catch(err => alert("Camera blocked or missing system permissions."));
+        }
+
+        function stopScanner() {
+            if(qrScannerInstance) {
+                qrScannerInstance.stop().then(() => {
+                    document.getElementById('scanner-block').style.display = "none";
+                }).catch(() => {});
+            }
+        }
+
+        // --- Decode token and launch pre-purchase verification card ---
+        function processScannedToken(tokenText) {
+            const components = tokenText.trim().split(/\s+/);
+            const primaryKey = components[0]; // Extract the main numeric code block
+
+            if (cmfDecoderDatabase[primaryKey]) {
+                const mapInfo = cmfDecoderDatabase[primaryKey];
+                const mockItem = {
+                    id: mapInfo.id,
+                    name: mapInfo.name,
+                    image: `https://bricklink.com{mapInfo.id}.png`,
+                    num_parts: 5,
+                    userValue: 0
+                };
+                launchModalView(mockItem);
+            } else {
+                document.getElementById('search').value = primaryKey;
+                queryCatalogDatabase(primaryKey);
+            }
+        }
+
+        renderUI();
+    </script>
+</body>
+</html>
