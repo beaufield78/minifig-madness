@@ -277,7 +277,7 @@
     </div>
 
     <script>
-        const REBRICKABLE_API_KEY = "957742eb812482095aa04ae021b16dcf";
+       const REBRICKABLE_API_KEY = "957742eb812482095aa04ae021b16dcf";
 
         // Global State variables
         let searchResults = [];
@@ -305,16 +305,17 @@
             grid.innerHTML = '<div class="loading-text">Searching global database...</div>';
 
             const nativeUrl = `https://rebrickable.com{REBRICKABLE_API_KEY}&search=${encodeURIComponent(searchQuery)}&page_size=28`;
-            
-            // FIXED: Switched to a reliable public edge mirror to bypass browser security blocks permanently
-            const proxyEndpoint = `https://htmldriven.com{encodeURIComponent(nativeUrl)}`;
+            const proxyEndpoint = `https://allorigins.win{encodeURIComponent(nativeUrl)}`;
 
             try {
                 const response = await fetch(proxyEndpoint);
                 const data = await response.json();
                 
-                // Parse the response body safely
-                const payload = typeof data.body === 'string' ? JSON.parse(data.body) : data;
+                // FIXED: Direct payload verification check handles object string or raw data arrays safely
+                let payload = data;
+                if (data && data.body) {
+                    payload = typeof data.body === 'string' ? JSON.parse(data.body) : data.body;
+                }
 
                 searchResults = (payload.results || []).map(fig => ({
                     id: fig.set_num,
@@ -325,8 +326,7 @@
                 }));
                 renderUI();
             } catch (err) {
-                // High-utility fallback: allow searching within items you've already added to your phone's memory
-                grid.innerHTML = '<div class="loading-text" style="color:var(--danger)">Connection bottleneck. Displaying saved figures from vault data pool...</div>';
+                grid.innerHTML = '<div class="loading-text" style="color:var(--danger)">Connection bottleneck. Pulling local device cache files instead...</div>';
                 searchResults = ownedVault.filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()) || item.id.toLowerCase().includes(searchQuery.toLowerCase()));
                 renderUI();
             }
@@ -369,12 +369,16 @@
         async function loadPartsBreakdown(setId, elementContainer) {
             elementContainer.innerHTML = "Fetching official component parts matrix...";
             const nativePartsUrl = `https://rebrickable.com{setId}/parts/?key=${REBRICKABLE_API_KEY}`;
-            const proxyPartsUrl = `https://htmldriven.com{encodeURIComponent(nativePartsUrl)}`;
+            const proxyPartsUrl = `https://allorigins.win{encodeURIComponent(nativePartsUrl)}`;
 
             try {
                 const res = await fetch(proxyPartsUrl);
                 const data = await res.json();
-                const payload = typeof data.body === 'string' ? JSON.parse(data.body) : data;
+                
+                let payload = data;
+                if (data && data.body) {
+                    payload = typeof data.body === 'string' ? JSON.parse(data.body) : data.body;
+                }
                 
                 if(!payload.results || payload.results.length === 0) {
                     elementContainer.innerHTML = "No distinct replacement part listings cataloged for this item.";
@@ -483,7 +487,7 @@
 
         // --- Camera Barcode / Box Scanner Interface ---
         function startScanner() {
-             document.getElementById('scanner-block').style.display = "block";
+            document.getElementById('scanner-block').style.display = "block";
             qrScannerInstance = new Html5Qrcode("reader");
             
             qrScannerInstance.start(
@@ -510,7 +514,7 @@
                 const mockItem = {
                     id: mapInfo.id,
                     name: mapInfo.name,
-                    image: `https://bricklink.com{mapInfo.id}.png`,
+                    image: `https://rebrickable.com{mapInfo.id}.png`,
                     num_parts: 5,
                     userValue: 0
                 };
