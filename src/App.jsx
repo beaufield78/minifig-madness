@@ -275,25 +275,40 @@ export default function App() {
           });
         }
 
-        const resolveThemeAndSeries = (blId, figName) => {
+        const resolveThemeAndSeries = (blId, rbId, figName) => {
           const lowerId = (blId || '').toLowerCase();
+          const lowerRbId = (rbId || '').toLowerCase();
           const lowerName = (figName || '').toLowerCase();
 
-          // Safe keyword checks first so items don't falsely fall into Star Wars
-          if (lowerName.includes('star wars') || lowerName.includes('jedi') || lowerName.includes('sith') || lowerName.includes('clone trooper') || lowerName.includes('darth') || lowerName.includes('mandalorian')) return { theme: 'Star Wars' };
-          if (lowerName.includes('spider-man') || lowerName.includes('iron man') || lowerName.includes('avengers') || lowerName.includes('thor') || lowerName.includes('captain america') || lowerName.includes('thanos')) return { theme: 'Marvel Super Heroes' };
-          if (lowerName.includes('harry potter') || lowerName.includes('hogwarts') || lowerName.includes('dumbledore') || lowerName.includes('hermione') || lowerName.includes('ron weasley')) return { theme: 'Harry Potter' };
-          if (lowerName.includes('batman') || lowerName.includes('superman') || lowerName.includes('joker') || lowerName.includes('wonder woman') || lowerName.includes('harley quinn')) return { theme: 'DC Super Heroes' };
-          if (lowerName.includes('ninjago') || lowerName.includes('lloyd') || lowerName.includes('kai') || lowerName.includes('jay') || lowerName.includes('cole') || lowerName.includes('nyan')) return { theme: 'Ninjago' };
-          if (lowerName.includes('minions') || lowerName.includes('gru') || lowerName.includes('kevin the minion')) return { theme: 'Minions' };
-          if (lowerName.includes('minecraft') || lowerName.includes('steve') || lowerName.includes('creeper') || lowerName.includes('zombie pigman')) return { theme: 'Minecraft' };
-          if (lowerName.includes('sonic') || lowerName.includes('tails') || lowerName.includes('knuckles') || lowerName.includes('eggman')) return { theme: 'Sonic the Hedgehog' };
-          if (lowerName.includes('scooby') || lowerName.includes('shaggy') || lowerName.includes('velma') || lowerName.includes('daphne') || lowerName.includes('fred')) return { theme: 'Scooby-Doo' };
+          // 1. Strict check: ONLY assign Star Wars if explicitly Star Wars
+          const isRealStarWars = lowerId.startsWith('sw') || 
+            lowerName.includes('star wars') || 
+            lowerName.includes('jedi') || 
+            lowerName.includes('sith') || 
+            lowerName.includes('clone trooper') || 
+            lowerName.includes('darth') || 
+            lowerName.includes('mandalorian') ||
+            lowerName.includes('lightsaber');
 
+          if (isRealStarWars) {
+            return { theme: 'Star Wars' };
+          }
+
+          // 2. Keyword checks for other themes
+          if (lowerName.includes('spider-man') || lowerName.includes('iron man') || lowerName.includes('avengers') || lowerName.includes('thor') || lowerName.includes('captain america') || lowerName.includes('thanos') || lowerName.includes('marvel')) return { theme: 'Marvel Super Heroes' };
+          if (lowerName.includes('harry potter') || lowerName.includes('hogwarts') || lowerName.includes('dumbledore') || lowerName.includes('hermione') || lowerName.includes('ron weasley')) return { theme: 'Harry Potter' };
+          if (lowerName.includes('batman') || lowerName.includes('superman') || lowerName.includes('joker') || lowerName.includes('wonder woman') || lowerName.includes('harley quinn') || lowerName.includes('dc comics')) return { theme: 'DC Super Heroes' };
+          if (lowerName.includes('ninjago') || lowerName.includes('lloyd') || lowerName.includes('kai') || lowerName.includes('jay') || lowerName.includes('cole') || lowerName.includes('nyan')) return { theme: 'Ninjago' };
+          if (lowerName.includes('minions') || lowerName.includes('gru')) return { theme: 'Minions' };
+          if (lowerName.includes('minecraft') || lowerName.includes('steve') || lowerName.includes('creeper')) return { theme: 'Minecraft' };
+          if (lowerName.includes('sonic') || lowerName.includes('tails') || lowerName.includes('knuckles')) return { theme: 'Sonic the Hedgehog' };
+          if (lowerName.includes('scooby') || lowerName.includes('shaggy') || lowerName.includes('velma')) return { theme: 'Scooby-Doo' };
+
+          // 3. Prefix matching against Master Themes
           for (const theme of MASTER_THEMES_BASE) {
             if (Array.isArray(theme.prefix)) {
-              if (theme.prefix.some(p => lowerId.startsWith(p))) return { theme: theme.name };
-            } else if (theme.prefix && lowerId.startsWith(theme.prefix)) {
+              if (theme.prefix.some(p => lowerId.startsWith(p) || lowerRbId.startsWith(p))) return { theme: theme.name };
+            } else if (theme.prefix && (lowerId.startsWith(theme.prefix) || lowerRbId.startsWith(theme.prefix))) {
               return { theme: theme.name };
             }
           }
@@ -340,7 +355,7 @@ export default function App() {
             
             if (rbId && rbId.startsWith('fig-')) {
               const blId = setMappingsMap[rbId] || `sw${rbId.replace('fig-', '')}`;
-              const { theme } = resolveThemeAndSeries(blId, name);
+              const { theme } = resolveThemeAndSeries(blId, rbId, name);
               const figSets = figSetsMap[rbId] || [];
               const figParts = figPartsMap[rbId] || [
                 { name: 'Minifigure Torso & Head Assembly', blPartId: '973', link: `https://www.bricklink.com/v2/catalog/catalogitem.page?P=973` }
