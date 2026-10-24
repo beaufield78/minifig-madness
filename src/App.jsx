@@ -171,47 +171,41 @@ export default function App() {
   useEffect(() => {
     async function loadDatabaseFiles() {
       try {
+        // 1. Load set mappings from Supabase
         let setMappingsMap = {};
-        const setMappingsRes = await fetch(new URL('./assets/database/set_mappings.csv', import.meta.url).href);
-        if (setMappingsRes.ok) {
-          const text = await setMappingsRes.text();
-          text.split('\n').forEach((line, idx) => {
-            if (idx === 0 || line.trim().length < 3) return;
-            const row = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(val => val.replace(/^"|"$/g, '').trim());
-            if (row.length >= 3) {
-              const setNum = row[0]; 
-              const extSystem = row[1]; 
-              const extId = row[2]; 
-              if (extSystem === 'BL' && setNum.startsWith('fig-')) {
-                setMappingsMap[setNum] = extId;
-              }
+        const { data: setMappingsData } = await supabase.from('set_mappings').select('*');
+        if (setMappingsData) {
+          setMappingsData.forEach(row => {
+            const setNum = row.set_num || row[0]; 
+            const extSystem = row.ext_system || row[1]; 
+            const extId = row.ext_id || row[2]; 
+            if (extSystem === 'BL' && setNum && setNum.startsWith('fig-')) {
+              setMappingsMap[setNum] = extId;
             }
           });
         }
 
+        // 2. Load part name mappings
         let partsMap = {};
-        const partsRes = await fetch(new URL('./assets/database/parts.csv', import.meta.url).href);
-        if (partsRes.ok) {
-          const text = await partsRes.text();
-          text.split('\n').forEach((line, idx) => {
-            if (idx === 0 || line.trim().length < 3) return;
-            const row = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(val => val.replace(/^"|"$/g, '').trim());
-            if (row.length >= 2) {
-              partsMap[row[0]] = row[1];
-            }
+        const { data: partsData } = await supabase.from('parts').select('*');
+        if (partsData) {
+          partsData.forEach(row => {
+            const partNum = row.part_num || row[0];
+            const partName = row.name || row[1];
+            if (partNum) partsMap[partNum] = partName;
           });
         }
 
+        // 3. Load inventories mapping
         let figInventoryIdMap = {};
-        const inventoriesRes = await fetch(new URL('./assets/database/inventories.csv', import.meta.url).href);
-        if (inventoriesRes.ok) {
-          const text = await inventoriesRes.text();
-          text.split('\n').forEach((line, idx) => {
-            if (idx === 0 || line.trim().length < 3) return;
-            const row = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(val => val.replace(/^"|"$/g, '').trim());
-            if (row.length >= 3) {
-              const invId = row[0];
-              const setNum = row[2];
+        let inventoryToSetMap = {};
+        const { data: inventoriesData } = await supabase.from('inventories').select('*');
+        if (inventoriesData) {
+          inventoriesData.forEach(row => {
+            const invId = row.id || row[0];
+            const setNum = row.set_num || row[2];
+            if (invId && setNum) {
+              inventoryToSetMap[invId] = setNum;
               if (setNum.startsWith('fig-')) {
                 figInventoryIdMap[setNum] = invId;
               }
@@ -219,92 +213,69 @@ export default function App() {
           });
         }
 
+        // 4. Load sets database
+        let loadedSets = [];
+        const { data: setsData } = await supabase.from('sets').select('*');
+        if (setsData) {
+          setsData.forEach(row => {
+            const setNum = row.set_num || row[0];
+            const setName = row.name || row[1] || 'Unknown Set';
+            const setYear = parseInt(row.year || row[2]) || 2020;
+            const setPieces = parseInt(row.num_parts || row[4]) || 100;
+
+            loadedSets.push({
+              number: setNum,
+              name: setName,
+              theme: 'Standard',
+              year: setYear,
+              pieces: setPieces,
+              value: 49.99,
+              image: `https://img.bricklink.com/ItemImage/SN/0/${setNum}.png`
+            });
+          });
+          if (loadedSets.length > 0) setSetsDB(loadedSets);
+        }
+
+        // 5. Load inventory parts mapping (parts breakdown)
         let figPartsMap = {};
-        const invPartsRes = await fetch(new URL('./assets/database/inventory_parts.csv', import.meta.url).href);
-        if (invPartsRes.ok) {
-          const text = await invPartsRes.text();
+        const { data: invPartsData } = await supabase.from('inventory_parts').select('*');
+        if (invPartsData) {
           let invToFigMap = {};
           Object.entries(figInventoryIdMap).forEach(([figNum, invId]) => {
             invToFigMap[invId] = figNum;
           });
 
-          text.split('\n').forEach((line, idx) => {
-            if (idx === 0 || line.trim().length < 3) return;
-            const row = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(val => val.replace(/^"|"$/g, '').trim());
-            if (row.length >= 2) {
-              const invId = row[0];
-              const partNum = row[1];
-              const quantity = row[3] || '1';
-              const figNum = invToFigMap[invId];
-              if (figNum) {
-                if (!figPartsMap[figNum]) figPartsMap[figNum] = [];
-                const partName = partsMap[partNum] || `Part ${partNum}`;
-                figPartsMap[figNum].push({
-                  name: `${quantity}x ${partName}`,
-                  blPartId: partNum,
-                  link: `https://www.bricklink.com/v2/catalog/catalogitem.page?P=${partNum}`
-                });
-              }
-            }
-          });
-        }
-
-        let loadedSets = [];
-        const setsRes = await fetch(new URL('./assets/database/sets.csv', import.meta.url).href);
-        if (setsRes.ok) {
-          const text = await setsRes.text();
-          text.split('\n').forEach((line, idx) => {
-            if (idx === 0 || line.trim().length < 3) return;
-            const row = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(val => val.replace(/^"|"$/g, '').trim());
-            if (row.length >= 4) {
-              const setNum = row[0];
-              const setName = row[1] || 'Unknown Set';
-              const setYear = parseInt(row[2]) || 2020;
-              const setPieces = parseInt(row[4]) || 100;
-
-              loadedSets.push({
-                number: setNum,
-                name: setName,
-                theme: 'Standard',
-                year: setYear,
-                pieces: setPieces,
-                value: 49.99,
-                image: `https://img.bricklink.com/ItemImage/SN/0/${setNum}.png`
+          invPartsData.forEach(row => {
+            const invId = row.inventory_id || row[0];
+            const partNum = row.part_num || row[1];
+            const quantity = row.quantity || row[3] || '1';
+            const figNum = invToFigMap[invId];
+            if (figNum) {
+              if (!figPartsMap[figNum]) figPartsMap[figNum] = [];
+              const partName = partsMap[partNum] || `Part ${partNum}`;
+              figPartsMap[figNum].push({
+                name: `${quantity}x ${partName}`,
+                blPartId: partNum,
+                link: `https://www.bricklink.com/v2/catalog/catalogitem.page?P=${partNum}`
               });
             }
           });
-          if (loadedSets.length > 0) setSetsDB(loadedSets);
         }
 
-        let inventoryToSetMap = {};
-        const invRes2 = await fetch(new URL('./assets/database/inventories.csv', import.meta.url).href);
-        if (invRes2.ok) {
-          const text = await invRes2.text();
-          text.split('\n').forEach((line, idx) => {
-            if (idx === 0 || line.trim().length < 3) return;
-            const row = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(val => val.replace(/^"|"$/g, '').trim());
-            if (row.length >= 3) inventoryToSetMap[row[0]] = row[2];
-          });
-        }
-
+        // 6. Load minifig-to-set connections
         let figSetsMap = {};
-        const invMinifigsRes = await fetch(new URL('./assets/database/inventory_minifigs.csv', import.meta.url).href);
-        if (invMinifigsRes.ok) {
-          const text = await invMinifigsRes.text();
-          text.split('\n').forEach((line, idx) => {
-            if (idx === 0 || line.trim().length < 3) return;
-            const row = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(val => val.replace(/^"|"$/g, '').trim());
-            if (row.length >= 2) {
-              const figNum = row[0];
-              const invId = row[1];
-              const setNum = inventoryToSetMap[invId];
-              if (setNum) {
-                const matchingSetObj = loadedSets.find(s => s.number === setNum);
-                if (matchingSetObj) {
-                  if (!figSetsMap[figNum]) figSetsMap[figNum] = [];
-                  if (!figSetsMap[figNum].some(s => s.number === setNum)) {
-                    figSetsMap[figNum].push(matchingSetObj);
-                  }
+        const { data: invMinifigsData } = await supabase.from('inventory_minifigs').select('*');
+        if (invMinifigsData) {
+          invMinifigsData.forEach(row => {
+            const figNum = row.fig_num || row[0];
+            const invId = row.inventory_id || row[1];
+            const setNum = inventoryToSetMap[invId];
+            if (setNum) {
+              const matchingSetObj = loadedSets.find(s => s.number === setNum);
+              if (matchingSetObj) {
+                if (!figSetsMap[figNum]) figSetsMap[figNum] = [];
+                if (!figSetsMap[figNum].some(s => s.number === setNum)) {
+                  figSetsMap[figNum].push(matchingSetObj);
                 }
               }
             }
@@ -315,10 +286,7 @@ export default function App() {
           const lowerId = (blId || '').toLowerCase();
           const lowerName = (figName || '').toLowerCase();
 
-          if (lowerId === 'shr001') {
-            return { theme: 'Miscellaneous', isCmf: false };
-          }
-          if (lowerId.startsWith('shell')) {
+          if (lowerId === 'shr001' || lowerId.startsWith('shell')) {
             return { theme: 'Miscellaneous', isCmf: false };
           }
 
@@ -330,14 +298,6 @@ export default function App() {
               if (num >= 148 && num <= 167) return { theme: 'The LEGO Movie 2 (71023)', isCmf: true };
             }
             return { theme: 'The LEGO Movie', isCmf: false };
-          }
-
-          if (lowerId.startsWith('gfb')) {
-            const numMatch = lowerId.match(/gfb(\d+)/);
-            if (numMatch) {
-              const num = parseInt(numMatch[1], 10);
-              if (num >= 1 && num <= 16) return { theme: 'German Football (71014)', isCmf: true };
-            }
           }
 
           if (lowerId.startsWith('col')) {
@@ -388,107 +348,15 @@ export default function App() {
             }
           }
 
-          const dimExplicitIds = ['sh002', 'sh012', 'sh095', 'sh101', 'sh143', 'sh146', 'sh218', 'tlm060', 'tlm061', 'tlm070', 'tlm099', 'njo116', 'njo140', 'njo144', 'njo156', 'njo157', 'njo161', 'loc099', 'loc104', 'loc109', 'lor037'];
-          if (lowerId.startsWith('dim') || dimExplicitIds.includes(lowerId)) {
-            const numMatch = lowerId.match(/dim(\d+)/);
-            if (numMatch) {
-              const num = parseInt(numMatch[1], 10);
-              if (num >= 1 && num <= 54) return { theme: 'LEGO Dimensions', isCmf: false };
-            }
-            if (dimExplicitIds.includes(lowerId)) return { theme: 'LEGO Dimensions', isCmf: false };
-          }
-
-          const mofExplicitIds = ['gen043', 'gen044', 'gen045'];
-          if (lowerId.startsWith('mof') || mofExplicitIds.includes(lowerId)) {
-            return { theme: 'Monster Fighters', isCmf: false };
-          }
-
-          const scoobyExplicitIds = ['scooby01', 'scooby02', 'scooby03', 'scooby04'];
-          const scoobyParts = ['21042pb01c03', '20690pb01c03', '20690pb01c02', '21042pb01c02', '20690pb01c01', '21042pb01c01'];
-          if (lowerId.startsWith('scd') || scoobyExplicitIds.includes(lowerId) || scoobyParts.some(p => lowerId.includes(p) || lowerName.includes(p))) {
-            return { theme: 'Scooby-Doo', isCmf: false };
-          }
-
           if (lowerId.startsWith('sh') || lowerId.startsWith('shg') || lowerId.startsWith('bat')) {
-            const marvelExplicitIds = [
-              'sh1053', 'sh0250', 'sh0251', 'sh0212', 'sh0173', 'sh0177', 
-              'sh0090', 'sh0045', 'sh0044', 'sh0038', 'sh0037', 'sh0035', 'sh0034', 
-              'sh0033', 'sh0032', 'sh0031', 'sh0030', 'sh0029', 'sh0018', 'sh0017', 
-              'sh0015', 'sh0014', 'sh0013', 'sh0041', 'sh0084', 'sh0602', 'sh0601', 
-              'sh0554', 'sh0605', 'sh0068', 'sh0071', 'sh0070', 'sh0069', 'sh0066', 
-              'sh0067', 'sh0053', 'sh0052', 'sh0054', 'sh0051', 'sh0056', 'sh0130', 
-              'sh0448', 'sh0407', 'sh0406', 'sh0579', 'sh0186', 'sh0404', 'sh0426', 
-              'sh0494', 'sh0571', 'sh0597a', 'sh0629', 'sh0630', 'sh0637', 'sh0675', 
-              'sh0676', 'sh0702', 'sh0699', 'sh0701', 'sh0700', 'sh0706', 'sh0705', 
-              'sh0694', 'sh0724', 'sh0712', 'sh0714', 'sh714', 'sh0716', 'sh0719', 
-              'sh0713', 'sh0726', 'sh0710', 'sh0725', 'sh0717', 'sh0720', 'sh0718', 
-              'sh0722', 'sh0715', 'sh0738', 'sh0746', 'sh0749', 'sh0751', 'sh0754', 
-              'sh0752', 'sh0638', 'sh0698', 'sh0140', 'sh0770', 'sh0767', 'sh0765', 
-              'sh0764', 'sh0766', 'sh0771', 'sh0763', 'sh0762', 'sh0768', 'sh0769', 
-              'sh0779', 'sh0793', 'sh0801', 'sh0821', 'sh0826', 'sh0830', 'sh0833', 
-              'sh0848', 'sh0840', 'sh0846', 'sh0841', 'sh0845', 'sh0856', 'sh0851', 
-              'sh0877', 'sh0881', 'sh0907', 'sh0912', 'sh0934', 'sh0921', 'sh0920', 
-              'sh0922', 'sh0930', 'sh0927', 'sh0931', 'sh0933', 'sh0942', 'sh0938', 
-              'sh0953', 'sh0378', 'sh0518', 'sh0203', 'sh0812', 'sh0980', 'sh0990', 
-              'sh0998', 'sh0995', 'sh0996', 'sh0994', 'sh1002', 'sh1025', 'sh1032', 
-              'sh1031', 'sh1012', 'sh1051', 'sh1049', 'sh1065', 'sh1059', 'sh1100', 
-              'sh1136', 'sh1142', 'sh1141', 'sh1158', 'sh1161', 'sh1165', 'sh1168', 
-              'sh1169', 'sh1171', 'sh1135', 'sh1139'
-            ];
-            const marvelKeywords = [
-              'spider-man', 'spider man', 'captain america', 'iron man', 'thor', 
-              'hulk', 'avengers', 'wolverine', 'deadpool', 'magneto', 'loki', 
-              'hawkeye', 'jean grey', 'rocket', 'thanos', 'venom', 'carnage', 
-              'black panther', 'doctor strange', 'ultron', 'vision', 'ant-man', 
-              'star-lord', 'groot', 'gamora', 'drax', 'collector', 'valkyrie', 
-              'hela', 'chitauri', 'iron fist', 'iron patriot', 'ned leeds', 
-              'maria hill', 'nick fury', 'captain marvel', 'pepper potts', 
-              'extremis', 'mandarin', 'tony stark', 'war machine', 'aldrich killian', 
-              'beetle', 'dr. doom', 'j jonah jameson', 'nova', 'scarlet witch', 
-              'iron legion', 'sandman', 'rhino', 'iron spider', 'shield agent', 
-              'beast boy', 'yellowjacket', 'hydra', 'iron skull', 'winter soldier', 
-              'quicksilver', 'baron von strucker', 'agent 13', 'crossbones', 
-              'falcon', 'hyperion', 'green goblin', 'kraven', 'scarlet spider', 
-              'scorpion', 'spider-girl', 'aunt may', 'ancient one', 'karl mordo', 
-              'captain stacy', 'dr. octopus', 'white tiger', 'vulture', 'ghost rider', 
-              'hobgoblin', 'mantis', 'taserface', 'justin hammer', 'agent coulson', 
-              'super-adaptoid', 'ms. marvel', 'yondu', 'nebula', 'grandmaster',
-              'cyclops', 'storm', 'sakaaran', 'ronan', 'modok', 'taskmaster', 
-              'red skull', 'power man', 'proxima midnight', 'outrider', 'shuri', 
-              'corvus glaive', 'ulysses klaue', 'erik killmonger', 'nakia', 
-              'okoye', 'talon', 'ebony maw', 'cull obsidian', 'ghost-spider', 
-              'spider-gwen', 'dock worker', 'happy hogan', 'mysterio', 'mj', 
-              'michelle jones', 'mary jane', 'hydro-man', 'firefighter', 'talos', 
-              'aim agent', 'electro', 'shocker', 'maria rambeau', 'yelena belova', 
-              'red guardian', 'razor fist', 'katy', 'wenwu', 'shang-chi', 'xialing', 
-              'death dealer', 'miles morales', 'daredevil', 'firestar', 'peter parker', 
-              'robbie robertson', 'ben urich', 'blade', 'betty brant', 'amber grant', 
-              'ron barney', 'taxi driver bernie', 'gwen stacy', 'punisher', 'black cat', 
-              'obadiah stone', 'watcher', 'captain carter', 'steve rogers', 'miek', 'korg',
-              'spider-ham', 'pork grind', 'spider-woman', 'phastos', 'makkari', 'sersi', 
-              'ikaris', 'thena', 'druig', 'kingo', 'ajak', 'gilgamesh', 'sprite', 
-              'wong', 'america chavez', 'whiplash', 'sinister strange', 'dead strange', 
-              'ironheart', 'attuma', "m'baku", 'namor', 'morbius', 'adam warlock', 
-              'photon', 'kevin feige', 'helen cho', 'alexander pierce', 'erik selvig', 
-              'wasp', 'dum-e', 'rogue', 'lizard', 'zola', 'ayesha', 'ghost', 'gorr', 
-              'fire demon', 'charles xavier', 'iceman', 'bishop', 'gambit', 
-              'ruth bat-seraph', 'trapster', 'spot', 'jefferson', 'the thing', 
-              'reed richards', 'norman osborn', 'boomerang', 'dodc guard', 'tombstone', 
-              'doctor doom', 'kurt wagner', 'nightcrawler', 'raven darkholme', 'mystique', 
-              'robert reynolds', 'sentry', 'tarantula', 'hotdog vendor'
-            ];
-            
-            if (marvelExplicitIds.includes(lowerId) || marvelKeywords.some(kw => lowerId.includes(kw) || lowerName.includes(kw))) {
-              return { theme: 'Marvel Super Heroes', isCmf: false };
-            }
+            const marvelExplicitIds = ['sh1053', 'sh0250', 'sh0251', 'sh0212', 'sh0173', 'sh0177', 'sh0090', 'sh0045', 'sh0044', 'sh0038', 'sh0037', 'sh0035', 'sh0034', 'sh0033', 'sh0032', 'sh0031', 'sh0030', 'sh0029', 'sh0018', 'sh0017', 'sh0015', 'sh0014', 'sh0013', 'sh0041', 'sh0084', 'sh0602', 'sh0601', 'sh0554', 'sh0605', 'sh0068', 'sh0071', 'sh0070', 'sh0069', 'sh0066', 'sh0067', 'sh0053', 'sh0052', 'sh0054', 'sh0051', 'sh0056', 'sh0130', 'sh0448', 'sh0407', 'sh0406', 'sh0579', 'sh0186', 'sh0404', 'sh0426', 'sh0494', 'sh0571', 'sh0597a', 'sh0629', 'sh0630', 'sh0637', 'sh0675', 'sh0676', 'sh0702', 'sh0699', 'sh0701', 'sh0700', 'sh0706', 'sh0705', 'sh0694', 'sh0724', 'sh0712', 'sh0714', 'sh714', 'sh0716', 'sh0719', 'sh0713', 'sh0726', 'sh0710', 'sh0725', 'sh0717', 'sh0720', 'sh0718', 'sh0722', 'sh0715', 'sh0738', 'sh0746', 'sh0749', 'sh0751', 'sh0754', 'sh0752', 'sh0638', 'sh0698', 'sh0140', 'sh0770', 'sh0767', 'sh0765', 'sh0764', 'sh0766', 'sh0771', 'sh0763', 'sh0762', 'sh0768', 'sh0769', 'sh0779', 'sh0793', 'sh0801', 'sh0821', 'sh0826', 'sh0830', 'sh0833', 'sh0848', 'sh0840', 'sh0846', 'sh0841', 'sh0845', 'sh0856', 'sh0851', 'sh0877', 'sh0881', 'sh0907', 'sh0912', 'sh0934', 'sh0921', 'sh0920', 'sh0922', 'sh0930', 'sh0927', 'sh0931', 'sh0933', 'sh0942', 'sh0938', 'sh0953', 'sh0378', 'sh0518', 'sh0203', 'sh0812', 'sh0980', 'sh0990', 'sh0998', 'sh0995', 'sh0996', 'sh0994', 'sh1002', 'sh1025', 'sh1032', 'sh1031', 'sh1012', 'sh1051', 'sh1049', 'sh1065', 'sh1059', 'sh1100', 'sh1136', 'sh1142', 'sh1141', 'sh1158', 'sh1161', 'sh1165', 'sh1168', 'sh1169', 'sh1171', 'sh1135', 'sh1139'];
+            if (marvelExplicitIds.includes(lowerId)) return { theme: 'Marvel Super Heroes', isCmf: false };
             return { theme: 'DC Super Heroes', isCmf: false };
           }
 
           for (const theme of MASTER_THEMES_BASE) {
             if (Array.isArray(theme.prefix)) {
-              if (theme.prefix.some(p => lowerId.startsWith(p))) {
-                return { theme: theme.name, isCmf: false };
-              }
+              if (theme.prefix.some(p => lowerId.startsWith(p))) return { theme: theme.name, isCmf: false };
             } else if (theme.prefix && lowerId.startsWith(theme.prefix)) {
               return { theme: theme.name, isCmf: false };
             }
@@ -497,29 +365,25 @@ export default function App() {
           return { theme: 'Miscellaneous', isCmf: false };
         };
 
-        // Smart Valuation Estimator
         const estimateValue = (blId, name) => {
           const id = (blId || '').toLowerCase();
           const nm = (name || '').toLowerCase();
-          if (id.includes('boba') || id.includes('rex') || id.includes('jango') || id.includes('vader') || nm.includes('boba fett')) return 45.00;
+          if (id.includes('boba') || id.includes('rex') || nm.includes('boba fett')) return 45.00;
           if (id.startsWith('sw') && parseInt(id.replace('sw','')) < 50) return 25.00;
-          if (nm.includes('gold') || nm.includes('chrome') || nm.includes('exclusive')) return 60.00;
           if (id.startsWith('col') || id.startsWith('sh') || id.startsWith('hp')) return 8.50;
           return 5.00;
         };
 
-        const minifigsRes = await fetch(new URL('./assets/database/minifigs.csv', import.meta.url).href);
-        if (minifigsRes.ok) {
-          const text = await minifigsRes.text();
+        // 7. Load minifigs master list from Supabase
+        const { data: minifigsData } = await supabase.from('minifigs').select('*');
+        if (minifigsData) {
           const loadedFigs = [];
-          text.split('\n').forEach((line, idx) => {
-            if (idx === 0 || line.trim().length < 3) return;
-            const row = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(val => val.replace(/^"|"$/g, '').trim());
-            if (row.length >= 2 && row[0].startsWith('fig-')) {
-              const rbId = row[0];
-              const name = row[1] || 'Unknown Minifigure';
-              const imgUrl = row[3] || `https://img.bricklink.com/ItemImage/MN/0/sw0001.png`;
-              
+          minifigsData.forEach(row => {
+            const rbId = row.fig_num || row[0];
+            const name = row.name || row[1] || 'Unknown Minifigure';
+            const imgUrl = row.img_url || row[3] || `https://img.bricklink.com/ItemImage/MN/0/sw0001.png`;
+            
+            if (rbId && rbId.startsWith('fig-')) {
               const blId = setMappingsMap[rbId] || `sw${rbId.replace('fig-', '')}`;
               const { theme } = resolveThemeAndSeries(blId, name);
               const figSets = figSetsMap[rbId] || [];
@@ -544,6 +408,7 @@ export default function App() {
             }
           });
 
+          // Custom additions
           loadedFigs.push({
             id: 'fig-donkey01',
             name: 'Donkey (Shrek)',
@@ -558,51 +423,12 @@ export default function App() {
             parts: [{ name: 'Donkey Body Element', blPartId: 'donkey01', link: 'https://www.bricklink.com/v2/catalog/catalogitem.page?P=donkey01' }]
           });
 
-          loadedFigs.push({
-            id: 'fig-shr001',
-            name: 'Puss in Boots (Miscellaneous)',
-            blId: 'shr001',
-            rbId: 'fig-shr001',
-            theme: 'Miscellaneous',
-            year: 2026,
-            value: 4.50,
-            owned: false,
-            image: 'https://img.bricklink.com/ItemImage/PN/147/shr001.png',
-            sets: [],
-            parts: [{ name: 'Puss in Boots Hat & Head Assembly', blPartId: 'shr001', link: 'https://www.bricklink.com/v2/catalog/catalogitem.page?P=shr001' }]
-          });
-
-          const scoobyPartsList = [
-            { id: '21042pb01c03', name: 'Scooby-Doo (Walking, Tongue Licking Chops)' },
-            { id: '20690pb01c03', name: 'Scooby-Doo (Sitting, Tongue Licking Chops)' },
-            { id: '20690pb01c02', name: 'Scooby-Doo (Sitting, Chattering Teeth)' },
-            { id: '21042pb01c02', name: 'Scooby-Doo (Walking, Chattering Teeth)' },
-            { id: '20690pb01c01', name: 'Scooby-Doo (Sitting, Pilot Goggles)' },
-            { id: '21042pb01c01', name: 'Scooby-Doo (Walking, Pilot Goggles)' }
-          ];
-
-          scoobyPartsList.forEach((sp, idx) => {
-            loadedFigs.push({
-              id: `fig-scooby-${idx}`,
-              name: sp.name,
-              blId: sp.id,
-              rbId: `fig-scooby-${idx}`,
-              theme: 'Scooby-Doo',
-              year: 2015,
-              value: 6.00,
-              owned: false,
-              image: `https://img.bricklink.com/ItemImage/PN/147/${sp.id}.png`,
-              sets: [],
-              parts: [{ name: sp.name, blPartId: sp.id, link: `https://www.bricklink.com/v2/catalog/catalogitem.page?P=${sp.id}` }]
-            });
-          });
-
           if (loadedFigs.length > 0) {
             setMinifigs(loadedFigs);
           }
         }
       } catch (err) {
-        console.log('Database auto-load error:', err);
+        console.log('Database cloud load error:', err);
       }
     }
     loadDatabaseFiles();
@@ -931,7 +757,6 @@ export default function App() {
             </button>
           </div>
 
-          {/* 3 Columns Grid View */}
           <div className="flex-1 overflow-y-auto grid grid-cols-3 gap-2.5 pb-4">
             {minifigs
               .filter(fig => fig.theme === selectedCategory.name)
