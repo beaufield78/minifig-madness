@@ -16,109 +16,107 @@ const getAssetImg = (filename) => {
 };
 
 const MASTER_THEMES_BASE = [
-  { id: 'star-wars', name: 'Star Wars', prefix: 'sw', image: getAssetImg('Star Wars.jfif') },
-  { id: 'marvel', name: 'Marvel Super Heroes', prefix: 'sh', image: getAssetImg('Marvel.jfif') },
-  { id: 'harry-potter', name: 'Harry Potter', prefix: 'hp', image: getAssetImg('Harry Potter.jfif') },
-  { id: 'ninjago', name: 'Ninjago', prefix: 'nj', image: getAssetImg('Ninjago.jfif') },
-  { id: 'dc', name: 'DC Super Heroes', prefix: ['bat', 'dc'], image: getAssetImg('DC.jfif') },
-  { id: 'city', name: 'City', prefix: 'cty', image: getAssetImg('City.jfif') },
-  { id: 'lord-of-the-rings', name: 'Lord of the Rings', prefix: 'lor', image: getAssetImg('Lord of the Rings.jfif') },
-  { id: 'jurassic-world', name: 'Jurassic World', prefix: 'jw', image: getAssetImg('Jurassic World.jfif') },
-  { id: 'minecraft', name: 'Minecraft', prefix: 'min', image: getAssetImg('Minecraft.jfif') },
-  { id: 'speed-champions', name: 'Speed Champions', prefix: 'sc', image: getAssetImg('Speed Champions.jfif') },
-  { id: 'indiana-jones', name: 'Indiana Jones', prefix: 'iaj', image: getAssetImg('Indiana Jones.jfif') },
-  { id: 'pirates-of-the-caribbean', name: 'Pirates of the Caribbean', prefix: 'poc', image: getAssetImg('Pirates of the Caribbean.jfif') },
-  { id: 'animal-crossing', name: 'Animal Crossing', prefix: 'ani', image: getAssetImg('Animal Crossing.jfif') },
-  { id: 'avatar-atla', name: 'Avatar: The Last Airbender', prefix: 'ava', image: getAssetImg('Avatar the Last Airbender.jfif') },
-  { id: 'avatar', name: 'Avatar', prefix: 'avt', image: getAssetImg('Avatar.jfif') },
-  { id: 'castle', name: 'Castle', prefix: 'cas', image: getAssetImg('Castle.jfif') },
-  { id: 'chima', name: 'Legends of Chima', prefix: 'loc', image: getAssetImg('Chima.jfif') },
-  { id: 'dimensions', name: 'LEGO Dimensions', prefix: 'dim', image: getAssetImg('Dimensions.jfif') },
-  { id: 'disney', name: 'Disney', prefix: 'dis', image: getAssetImg('Disney.jfif') },
-  { id: 'dreamzzz', name: 'DREAMzzZ', prefix: 'drm', image: getAssetImg('Dreamzzz.jfif') },
-  { id: 'ghostbusters', name: 'Ghostbusters', prefix: 'gb', image: getAssetImg('Ghostbusters.jfif') },
-  { id: 'hidden-side', name: 'Hidden Side', prefix: 'hs', image: getAssetImg('Hidden Side.jfif') },
-  { id: 'ideas', name: 'Ideas and Icons', prefix: 'idea', image: getAssetImg('Ideas and Icons.jfif') },
-  { id: 'kpop', name: 'Kpop Demon Hunters', prefix: 'kpo', image: getAssetImg('Kpop Demon Hunters.jfif') },
-  { id: 'mario', name: 'Super Mario', prefix: 'mar', image: getAssetImg('Mario.jfif') },
-  { id: 'minions', name: 'Minions', prefix: 'mnn', image: getAssetImg('Minions.jfif') },
-  { id: 'monkie-kid', name: 'Monkie Kid', prefix: 'mk', image: getAssetImg('Monkie Kid.jfif') },
-  { id: 'monster-fighters', name: 'Monster Fighters', prefix: 'mof', image: getAssetImg('Monster Hunters.jfif') },
-  { id: 'nexo-knights', name: 'Nexo Knights', prefix: 'nex', image: getAssetImg('Nexo Knights.jfif') },
-  { id: 'one-piece', name: 'One Piece', prefix: 'op', image: getAssetImg('One Piece.jfif') },
-  { id: 'overwatch', name: 'Overwatch', prefix: 'ow', image: getAssetImg('Overwatch.jfif') },
-  { id: 'pirate', name: 'Pirates', prefix: 'pi', image: getAssetImg('Pirate.jfif') },
-  { id: 'pokemon', name: 'Pokemon', prefix: 'pok', image: getAssetImg('Pokemon.jfif') },
-  { id: 'scooby-doo', name: 'Scooby-Doo', prefix: 'scd', image: getAssetImg('Scooby-Doo.jfif') },
-  { id: 'sonic', name: 'Sonic the Hedgehog', prefix: 'son', image: getAssetImg('Sonic.jfif') },
-  { id: 'space', name: 'Space', prefix: 'sp', image: getAssetImg('Space.jfif') },
-  { id: 'spongebob', name: 'SpongeBob SquarePants', prefix: 'bob', image: getAssetImg('SpongeBob Squarepants.jfif') },
-  { id: 'stranger-things', name: 'Stranger Things', prefix: 'st', image: getAssetImg('Stranger Things.jfif') },
-  { id: 'tmnt', name: 'Teenage Mutant Ninja Turtles', prefix: 'tnt', image: getAssetImg('Teenage Mutant Ninja Turtles.jfif') },
-  { id: 'lego-movie', name: 'The LEGO Movie', prefix: 'tlm', image: getAssetImg('The LEGO Movie.jfif') },
-  { id: 'town', name: 'Town', prefix: ['twn', 'town'], image: getAssetImg('Town.jfif') },
-  { id: 'wednesday', name: 'Wednesday', prefix: 'wed', image: getAssetImg('Wednesday.jfif') },
-  { id: 'wicked', name: 'Wicked', prefix: 'wck', image: getAssetImg('Wicked.jfif') },
-  { id: 'zelda', name: 'The Legend of Zelda', prefix: 'loz', image: getAssetImg('Zelda.jfif') },
-  { id: 'dragon-ball', name: 'Dragon Ball', prefix: 'drb', image: getAssetImg('Misc.jfif') },
-  { id: 'misc', name: 'Miscellaneous', prefix: 'misc', image: getAssetImg('Misc.jfif') }
+  { id: 'star-wars', name: 'Star Wars', prefix: ['sw', 'fig-sw'], image: getAssetImg('Star Wars.jfif') },
+  { id: 'marvel', name: 'Marvel Super Heroes', prefix: ['sh', 'fig-sh'], image: getAssetImg('Marvel.jfif') },
+  { id: 'harry-potter', name: 'Harry Potter', prefix: ['hp', 'fig-hp'], image: getAssetImg('Harry Potter.jfif') },
+  { id: 'ninjago', name: 'Ninjago', prefix: ['nj', 'njo', 'fig-nj'], image: getAssetImg('Ninjago.jfif') },
+  { id: 'dc', name: 'DC Super Heroes', prefix: ['bat', 'dc', 'fig-dc'], image: getAssetImg('DC.jfif') },
+  { id: 'city', name: 'City', prefix: ['cty', 'fig-cty'], image: getAssetImg('City.jfif') },
+  { id: 'lord-of-the-rings', name: 'Lord of the Rings', prefix: ['lor', 'fig-lor'], image: getAssetImg('Lord of the Rings.jfif') },
+  { id: 'jurassic-world', name: 'Jurassic World', prefix: ['jw', 'fig-jw'], image: getAssetImg('Jurassic World.jfif') },
+  { id: 'minecraft', name: 'Minecraft', prefix: ['min', 'fig-min'], image: getAssetImg('Minecraft.jfif') },
+  { id: 'speed-champions', name: 'Speed Champions', prefix: ['sc', 'fig-sc'], image: getAssetImg('Speed Champions.jfif') },
+  { id: 'indiana-jones', name: 'Indiana Jones', prefix: ['iaj', 'fig-iaj'], image: getAssetImg('Indiana Jones.jfif') },
+  { id: 'pirates-of-the-caribbean', name: 'Pirates of the Caribbean', prefix: ['poc', 'fig-poc'], image: getAssetImg('Pirates of the Caribbean.jfif') },
+  { id: 'animal-crossing', name: 'Animal Crossing', prefix: ['ani', 'fig-ani'], image: getAssetImg('Animal Crossing.jfif') },
+  { id: 'avatar-atla', name: 'Avatar: The Last Airbender', prefix: ['ava', 'fig-ava'], image: getAssetImg('Avatar the Last Airbender.jfif') },
+  { id: 'avatar', name: 'Avatar', prefix: ['avt', 'fig-avt'], image: getAssetImg('Avatar.jfif') },
+  { id: 'castle', name: 'Castle', prefix: ['cas', 'fig-cas'], image: getAssetImg('Castle.jfif') },
+  { id: 'chima', name: 'Legends of Chima', prefix: ['loc', 'fig-loc'], image: getAssetImg('Chima.jfif') },
+  { id: 'dimensions', name: 'LEGO Dimensions', prefix: ['dim', 'fig-dim'], image: getAssetImg('Dimensions.jfif') },
+  { id: 'disney', name: 'Disney', prefix: ['dis', 'fig-dis'], image: getAssetImg('Disney.jfif') },
+  { id: 'dreamzzz', name: 'DREAMzzZ', prefix: ['drm', 'fig-drm'], image: getAssetImg('Dreamzzz.jfif') },
+  { id: 'ghostbusters', name: 'Ghostbusters', prefix: ['gb', 'fig-gb'], image: getAssetImg('Ghostbusters.jfif') },
+  { id: 'hidden-side', name: 'Hidden Side', prefix: ['hs', 'fig-hs'], image: getAssetImg('Hidden Side.jfif') },
+  { id: 'ideas', name: 'Ideas and Icons', prefix: ['idea', 'fig-idea'], image: getAssetImg('Ideas and Icons.jfif') },
+  { id: 'kpop', name: 'Kpop Demon Hunters', prefix: ['kpo', 'fig-kpo'], image: getAssetImg('Kpop Demon Hunters.jfif') },
+  { id: 'mario', name: 'Super Mario', prefix: ['mar', 'fig-mar'], image: getAssetImg('Mario.jfif') },
+  { id: 'minions', name: 'Minions', prefix: ['mnn', 'fig-mnn'], image: getAssetImg('Minions.jfif') },
+  { id: 'monkie-kid', name: 'Monkie Kid', prefix: ['mk', 'fig-mk'], image: getAssetImg('Monkie Kid.jfif') },
+  { id: 'monster-fighters', name: 'Monster Fighters', prefix: ['mof', 'fig-mof'], image: getAssetImg('Monster Hunters.jfif') },
+  { id: 'nexo-knights', name: 'Nexo Knights', prefix: ['nex', 'fig-nex'], image: getAssetImg('Nexo Knights.jfif') },
+  { id: 'one-piece', name: 'One Piece', prefix: ['op', 'fig-op'], image: getAssetImg('One Piece.jfif') },
+  { id: 'overwatch', name: 'Overwatch', prefix: ['ow', 'fig-ow'], image: getAssetImg('Overwatch.jfif') },
+  { id: 'pirate', name: 'Pirates', prefix: ['pi', 'fig-pi'], image: getAssetImg('Pirate.jfif') },
+  { id: 'pokemon', name: 'Pokemon', prefix: ['pok', 'fig-pok'], image: getAssetImg('Pokemon.jfif') },
+  { id: 'scooby-doo', name: 'Scooby-Doo', prefix: ['scd', 'fig-scd'], image: getAssetImg('Scooby-Doo.jfif') },
+  { id: 'sonic', name: 'Sonic the Hedgehog', prefix: ['son', 'fig-son'], image: getAssetImg('Sonic.jfif') },
+  { id: 'space', name: 'Space', prefix: ['sp', 'fig-sp'], image: getAssetImg('Space.jfif') },
+  { id: 'spongebob', name: 'SpongeBob SquarePants', prefix: ['bob', 'fig-bob'], image: getAssetImg('SpongeBob Squarepants.jfif') },
+  { id: 'stranger-things', name: 'Stranger Things', prefix: ['st', 'fig-st'], image: getAssetImg('Stranger Things.jfif') },
+  { id: 'tmnt', name: 'Teenage Mutant Ninja Turtles', prefix: ['tnt', 'fig-tnt'], image: getAssetImg('Teenage Mutant Ninja Turtles.jfif') },
+  { id: 'lego-movie', name: 'The LEGO Movie', prefix: ['tlm', 'fig-tlm'], image: getAssetImg('The LEGO Movie.jfif') },
+  { id: 'town', name: 'Town', prefix: ['twn', 'town', 'fig-twn'], image: getAssetImg('Town.jfif') },
+  { id: 'wednesday', name: 'Wednesday', prefix: ['wed', 'fig-wed'], image: getAssetImg('Wednesday.jfif') },
+  { id: 'wicked', name: 'Wicked', prefix: ['wck', 'fig-wck'], image: getAssetImg('Wicked.jfif') },
+  { id: 'zelda', name: 'The Legend of Zelda', prefix: ['loz', 'fig-loz'], image: getAssetImg('Zelda.jfif') },
+  { id: 'dragon-ball', name: 'Dragon Ball', prefix: ['drb', 'fig-drb'], image: getAssetImg('Misc.jfif') },
+  { id: 'misc', name: 'Miscellaneous', prefix: ['misc', 'fig-misc'], image: getAssetImg('Misc.jfif') }
 ];
 
 const CMF_SERIES_BASE = [
-  { id: 'cmf-1', name: 'Series 1 (8683)', image: getAssetImg('Series-1.jpeg') },
-  { id: 'cmf-2', name: 'Series 2 (8684)', image: getAssetImg('Series-2.webp') },
-  { id: 'cmf-3', name: 'Series 3 (8803)', image: getAssetImg('Series-3.webp') },
-  { id: 'cmf-4', name: 'Series 4 (8804)', image: getAssetImg('Series-4.webp') },
-  { id: 'cmf-5', name: 'Series 5 (8805)', image: getAssetImg('Series-5.webp') },
-  { id: 'cmf-6', name: 'Series 6 (8827)', image: getAssetImg('Series-6.webp') },
-  { id: 'cmf-7', name: 'Series 7 (8831)', image: getAssetImg('Series-7.webp') },
-  { id: 'cmf-8', name: 'Series 8 (8833)', image: getAssetImg('Series-8.webp') },
-  { id: 'cmf-9', name: 'Series 9 (71000)', image: getAssetImg('Series-9.jpg') },
-  { id: 'cmf-10', name: 'Series 10 (71001)', image: getAssetImg('Series-10.jpg') },
-  { id: 'cmf-11', name: 'Series 11 (71002)', image: getAssetImg('Series-11.webp') },
-  { id: 'cmf-12', name: 'Team GB (8909)', image: getAssetImg('Team GB Olympic Series.webp') },
-  { id: 'cmf-13', name: 'The Simpsons S1 (71005)', image: getAssetImg('The Simpsons Series 1.webp') },
-  { id: 'cmf-14', name: 'Series 12 (71007)', image: getAssetImg('Series-12.webp') },
-  { id: 'cmf-15', name: 'Series 13 (71008)', image: getAssetImg('Series-13.webp') },
-  { id: 'cmf-16', name: 'The Simpsons S2 (71009)', image: getAssetImg('The Simpsons Series 2.webp') },
-  { id: 'cmf-17', name: 'Series 14 Monsters (71010)', image: getAssetImg('Series-14.webp') },
-  { id: 'cmf-18', name: 'Series 15 (71011)', image: getAssetImg('Series-15.webp') },
-  { id: 'cmf-19', name: 'Disney Series 1 (71012)', image: getAssetImg('Disney Series 1.webp') },
-  { id: 'cmf-20', name: 'Series 16 (71013)', image: getAssetImg('Series-16.webp') },
-  { id: 'cmf-21', name: 'German Football (71014)', image: getAssetImg('DFB German Football Team.webp') },
-  { id: 'cmf-22', name: 'Series 17 (71018)', image: getAssetImg('Series-17.webp') },
-  { id: 'cmf-23', name: 'The LEGO Batman Movie S1 (71017)', image: getAssetImg('The Lego Batman Movie Series 1.webp') },
-  { id: 'cmf-23b', name: 'The LEGO Batman Movie S2', image: getAssetImg('The Lego Batman Movie Series 1.webp') },
-  { id: 'cmf-23c', name: 'The LEGO Ninjago Movie', image: getAssetImg('Ninjago.jfif') },
-  { id: 'cmf-24', name: 'Series 18 Party (71021)', image: getAssetImg('Series-18.webp') },
-  { id: 'cmf-25', name: 'Harry Potter S1 (71022)', image: getAssetImg('Harry Potter Series 1.webp') },
-  { id: 'cmf-26', name: 'Series 19 (71025)', image: getAssetImg('Series-19.webp') },
-  { id: 'cmf-27', name: 'The LEGO Movie 2 (71023)', image: getAssetImg('The LEGO Movie 2.webp') },
-  { id: 'cmf-28', name: 'Disney Series 2 (71024)', image: getAssetImg('Disney Series 2.webp') },
-  { id: 'cmf-29', name: 'Series 20 (71027)', image: getAssetImg('Series-20.webp') },
-  { id: 'cmf-30', name: 'Harry Potter S2 (71028)', image: getAssetImg('Harry Potter Series 2.webp') },
-  { id: 'cmf-31', name: 'DC Super Heroes (71026)', image: getAssetImg('DC Super Heroes.webp') },
-  { id: 'cmf-32', name: 'Series 21 (71029)', image: getAssetImg('Series-21.webp') },
-  { id: 'cmf-33', name: 'Looney Tunes (71030)', image: getAssetImg('Looney Tunes.webp') },
-  { id: 'cmf-34', name: 'Marvel Series 1 (71031)', image: getAssetImg('Marvel Series 1.jpg') },
-  { id: 'cmf-35', name: 'Vidiyo Series 1 (43101)', image: 'https://img.bricklink.com/ItemImage/MN/0/colvid1.png' },
-  { id: 'cmf-36', name: 'Series 22 (71032)', image: getAssetImg('Series-22.webp') },
-  { id: 'cmf-37', name: 'The Muppets (71033)', image: getAssetImg('The Muppets.webp') },
-  { id: 'cmf-38', name: 'Series 23 (71034)', image: getAssetImg('Series-23.jpg') },
-  { id: 'cmf-39', name: 'Vidiyo Series 2 (43108)', image: 'https://img.bricklink.com/ItemImage/MN/0/colvid2.png' },
-  { id: 'cmf-40', name: 'Series 24 (71037)', image: getAssetImg('Series-24.webp') },
-  { id: 'cmf-41', name: 'Disney 100 (71038)', image: getAssetImg('Disney 100.jpg') },
-  { id: 'cmf-42', name: 'Marvel Series 2 (71039)', image: getAssetImg('Marvel Series 2.webp') },
-  { id: 'cmf-43', name: 'Series 25 (71045)', image: getAssetImg('Series-25.webp') },
-  { id: 'cmf-44', name: 'Series 26 Space (71046)', image: getAssetImg('Series-26.webp') },
-  { id: 'cmf-45', name: 'Dungeons & Dragons (71047)', image: getAssetImg('Dungeons & Dragons.webp') },
-  { id: 'cmf-46', name: 'Series 27', image: getAssetImg('Series-27.webp') },
-  { id: 'cmf-47', name: 'Series 28', image: getAssetImg('Series-28.png') },
-  { id: 'cmf-48', name: 'Series 29', image: getAssetImg('Series-29.webp') },
-  { id: 'cmf-49', name: 'Spider-Man: Across the Spider-Verse', image: getAssetImg('Spider-Man Across the Spider-Verse.webp') },
-  { id: 'cmf-50', name: 'Shrek', image: getAssetImg('Shrek.webp') },
-  { id: 'cmf-51', name: 'Unikitty!', image: getAssetImg('Unikitty.webp') },
-  { id: 'cmf-52', name: 'The LEGO Movie Series 1', image: getAssetImg('The LEGO Movie.jfif') }
+  { id: 'cmf-1', name: 'Series 1 (8683)', prefix: ['col01', 'col001'], image: getAssetImg('Series-1.jpeg') },
+  { id: 'cmf-2', name: 'Series 2 (8684)', prefix: ['col02', 'col017'], image: getAssetImg('Series-2.webp') },
+  { id: 'cmf-3', name: 'Series 3 (8803)', prefix: ['col03', 'col033'], image: getAssetImg('Series-3.webp') },
+  { id: 'cmf-4', name: 'Series 4 (8804)', prefix: ['col04', 'col049'], image: getAssetImg('Series-4.webp') },
+  { id: 'cmf-5', name: 'Series 5 (8805)', prefix: ['col05', 'col065'], image: getAssetImg('Series-5.webp') },
+  { id: 'cmf-6', name: 'Series 6 (8827)', prefix: ['col06', 'col081'], image: getAssetImg('Series-6.webp') },
+  { id: 'cmf-7', name: 'Series 7 (8831)', prefix: ['col07', 'col097'], image: getAssetImg('Series-7.webp') },
+  { id: 'cmf-8', name: 'Series 8 (8833)', prefix: ['col08', 'col113'], image: getAssetImg('Series-8.webp') },
+  { id: 'cmf-9', name: 'Series 9 (71000)', prefix: ['col09', 'col129'], image: getAssetImg('Series-9.jpg') },
+  { id: 'cmf-10', name: 'Series 10 (71001)', prefix: ['col10', 'col145'], image: getAssetImg('Series-10.jpg') },
+  { id: 'cmf-11', name: 'Series 11 (71002)', prefix: ['col11', 'col162'], image: getAssetImg('Series-11.webp') },
+  { id: 'cmf-12', name: 'Team GB (8909)', prefix: ['col12'], image: getAssetImg('Team GB Olympic Series.webp') },
+  { id: 'cmf-13', name: 'The Simpsons S1 (71005)', prefix: ['col13', 'colsim'], image: getAssetImg('The Simpsons Series 1.webp') },
+  { id: 'cmf-14', name: 'Series 12 (71007)', prefix: ['col14', 'col178'], image: getAssetImg('Series-12.webp') },
+  { id: 'cmf-15', name: 'Series 13 (71008)', prefix: ['col15', 'col194'], image: getAssetImg('Series-13.webp') },
+  { id: 'cmf-16', name: 'The Simpsons S2 (71009)', prefix: ['col16'], image: getAssetImg('The Simpsons Series 2.webp') },
+  { id: 'cmf-17', name: 'Series 14 Monsters (71010)', prefix: ['col17', 'col210'], image: getAssetImg('Series-14.webp') },
+  { id: 'cmf-18', name: 'Series 15 (71011)', prefix: ['col18', 'col226'], image: getAssetImg('Series-15.webp') },
+  { id: 'cmf-19', name: 'Disney Series 1 (71012)', prefix: ['coldis'], image: getAssetImg('Disney Series 1.webp') },
+  { id: 'cmf-20', name: 'Series 16 (71013)', prefix: ['col19', 'col242'], image: getAssetImg('Series-16.webp') },
+  { id: 'cmf-21', name: 'German Football (71014)', prefix: ['gfb'], image: getAssetImg('DFB German Football Team.webp') },
+  { id: 'cmf-22', name: 'Series 17 (71018)', prefix: ['col21', 'col286'], image: getAssetImg('Series-17.webp') },
+  { id: 'cmf-23', name: 'The LEGO Batman Movie S1 (71017)', prefix: ['coltlbm'], image: getAssetImg('The Lego Batman Movie Series 1.webp') },
+  { id: 'cmf-24', name: 'Series 18 Party (71021)', prefix: ['col22', 'col302'], image: getAssetImg('Series-18.webp') },
+  { id: 'cmf-25', name: 'Harry Potter S1 (71022)', prefix: ['colhp'], image: getAssetImg('Harry Potter Series 1.webp') },
+  { id: 'cmf-26', name: 'Series 19 (71025)', prefix: ['col23', 'col319'], image: getAssetImg('Series-19.webp') },
+  { id: 'cmf-27', name: 'The LEGO Movie 2 (71023)', prefix: ['coltlm2'], image: getAssetImg('The LEGO Movie 2.webp') },
+  { id: 'cmf-28', name: 'Disney Series 2 (71024)', prefix: ['coldis2'], image: getAssetImg('Disney Series 2.webp') },
+  { id: 'cmf-29', name: 'Series 20 (71027)', prefix: ['col24', 'col335'], image: getAssetImg('Series-20.webp') },
+  { id: 'cmf-30', name: 'Harry Potter S2 (71028)', prefix: ['colhp2'], image: getAssetImg('Harry Potter Series 2.webp') },
+  { id: 'cmf-31', name: 'DC Super Heroes (71026)', prefix: ['colsh'], image: getAssetImg('DC Super Heroes.webp') },
+  { id: 'cmf-32', name: 'Series 21 (71029)', prefix: ['col351'], image: getAssetImg('Series-21.webp') },
+  { id: 'cmf-33', name: 'Looney Tunes (71030)', prefix: ['collt'], image: getAssetImg('Looney Tunes.webp') },
+  { id: 'cmf-34', name: 'Marvel Series 1 (71031)', prefix: ['colmar'], image: getAssetImg('Marvel Series 1.jpg') },
+  { id: 'cmf-35', name: 'Vidiyo Series 1 (43101)', prefix: ['colvid1'], image: 'https://img.bricklink.com/ItemImage/MN/0/colvid1.png' },
+  { id: 'cmf-36', name: 'Series 22 (71032)', prefix: ['col363'], image: getAssetImg('Series-22.webp') },
+  { id: 'cmf-37', name: 'The Muppets (71033)', prefix: ['colmup'], image: getAssetImg('The Muppets.webp') },
+  { id: 'cmf-38', name: 'Series 23 (71034)', prefix: ['col394'], image: getAssetImg('Series-23.jpg') },
+  { id: 'cmf-39', name: 'Vidiyo Series 2 (43108)', prefix: ['colvid2'], image: 'https://img.bricklink.com/ItemImage/MN/0/colvid2.png' },
+  { id: 'cmf-40', name: 'Series 24 (71037)', prefix: ['col411'], image: getAssetImg('Series-24.webp') },
+  { id: 'cmf-41', name: 'Disney 100 (71038)', prefix: ['coldis100'], image: getAssetImg('Disney 100.jpg') },
+  { id: 'cmf-42', name: 'Marvel Series 2 (71039)', prefix: ['colmar2'], image: getAssetImg('Marvel Series 2.webp') },
+  { id: 'cmf-43', name: 'Series 25 (71045)', prefix: ['col423'], image: getAssetImg('Series-25.webp') },
+  { id: 'cmf-44', name: 'Series 26 Space (71046)', prefix: ['col436'], image: getAssetImg('Series-26.webp') },
+  { id: 'cmf-45', name: 'Dungeons & Dragons (71047)', prefix: ['coldnd'], image: getAssetImg('Dungeons & Dragons.webp') },
+  { id: 'cmf-46', name: 'Series 27', prefix: ['col449'], image: getAssetImg('Series-27.webp') },
+  { id: 'cmf-47', name: 'Series 28', prefix: ['col461'], image: getAssetImg('Series-28.png') },
+  { id: 'cmf-48', name: 'Series 29', prefix: ['col474'], image: getAssetImg('Series-29.webp') },
+  { id: 'cmf-49', name: 'Spider-Man: Across the Spider-Verse', prefix: ['colspi'], image: getAssetImg('Spider-Man Across the Spider-Verse.webp') },
+  { id: 'cmf-50', name: 'Shrek', prefix: ['colshr', 'donkey01'], image: getAssetImg('Shrek.webp') },
+  { id: 'cmf-51', name: 'Unikitty!', prefix: ['coluni'], image: getAssetImg('Unikitty.webp') },
+  { id: 'cmf-52', name: 'The LEGO Movie Series 1', prefix: ['coltlm'], image: getAssetImg('The LEGO Movie.jfif') }
 ];
 
 export default function App() {
@@ -143,7 +141,6 @@ export default function App() {
 
   const videoRef = useRef(null);
 
-  // Load cloud sync data from Supabase on mount
   useEffect(() => {
     async function fetchCloudData() {
       const { data, error } = await supabase.from('user_collection').select('*');
@@ -171,7 +168,6 @@ export default function App() {
   useEffect(() => {
     async function loadDatabaseFiles() {
       try {
-        // 1. Load set mappings from Supabase
         let setMappingsMap = {};
         const { data: setMappingsData } = await supabase.from('set_mappings').select('*');
         if (setMappingsData) {
@@ -179,13 +175,12 @@ export default function App() {
             const setNum = row.set_num || row[0]; 
             const extSystem = row.ext_system || row[1]; 
             const extId = row.ext_id || row[2]; 
-            if (extSystem === 'BL' && setNum && setNum.startsWith('fig-')) {
+            if (extSystem === 'BL' && setNum) {
               setMappingsMap[setNum] = extId;
             }
           });
         }
 
-        // 2. Load part name mappings
         let partsMap = {};
         const { data: partsData } = await supabase.from('parts').select('*');
         if (partsData) {
@@ -196,7 +191,6 @@ export default function App() {
           });
         }
 
-        // 3. Load inventories mapping
         let figInventoryIdMap = {};
         let inventoryToSetMap = {};
         const { data: inventoriesData } = await supabase.from('inventories').select('*');
@@ -213,7 +207,6 @@ export default function App() {
           });
         }
 
-        // 4. Load sets database
         let loadedSets = [];
         const { data: setsData } = await supabase.from('sets').select('*');
         if (setsData) {
@@ -236,7 +229,6 @@ export default function App() {
           if (loadedSets.length > 0) setSetsDB(loadedSets);
         }
 
-        // 5. Load inventory parts mapping (parts breakdown)
         let figPartsMap = {};
         const { data: invPartsData } = await supabase.from('inventory_parts').select('*');
         if (invPartsData) {
@@ -262,7 +254,6 @@ export default function App() {
           });
         }
 
-        // 6. Load minifig-to-set connections
         let figSetsMap = {};
         const { data: invMinifigsData } = await supabase.from('inventory_minifigs').select('*');
         if (invMinifigsData) {
@@ -282,87 +273,33 @@ export default function App() {
           });
         }
 
-        const resolveThemeAndSeries = (blId, figName) => {
+        const resolveThemeAndSeries = (blId, rbId, figName) => {
           const lowerId = (blId || '').toLowerCase();
+          const lowerRbId = (rbId || '').toLowerCase();
           const lowerName = (figName || '').toLowerCase();
 
-          if (lowerId === 'shr001' || lowerId.startsWith('shell')) {
-            return { theme: 'Miscellaneous', isCmf: false };
-          }
-
-          if (lowerId.startsWith('tlm')) {
-            const numMatch = lowerId.match(/tlm(\d+)/);
-            if (numMatch) {
-              const num = parseInt(numMatch[1], 10);
-              if (num >= 1 && num <= 16) return { theme: 'The LEGO Movie Series 1', isCmf: true };
-              if (num >= 148 && num <= 167) return { theme: 'The LEGO Movie 2 (71023)', isCmf: true };
-            }
-            return { theme: 'The LEGO Movie', isCmf: false };
-          }
-
-          if (lowerId.startsWith('col')) {
-            if (lowerId.startsWith('colshr') || lowerId === 'donkey01') return { theme: 'Shrek', isCmf: true };
-            if (lowerId.startsWith('coluni')) return { theme: 'Unikitty!', isCmf: true };
-            if (lowerId.startsWith('coldnd')) return { theme: 'Dungeons & Dragons (71047)', isCmf: true };
-            if (lowerId.startsWith('colspi')) return { theme: 'Spider-Man: Across the Spider-Verse', isCmf: true };
-            if (lowerId.startsWith('coltlnm')) return { theme: 'The LEGO Ninjago Movie', isCmf: true };
-            if (lowerId.startsWith('colhp')) return { theme: 'Harry Potter S1 (71022)', isCmf: true };
-            if (lowerId.startsWith('colmar')) return { theme: 'Marvel Series 1 (71031)', isCmf: true };
-            if (lowerId.startsWith('colsh')) return { theme: 'DC Super Heroes (71026)', isCmf: true };
-            if (lowerId.startsWith('coltm') || lowerId.startsWith('colmup')) return { theme: 'The Muppets (71033)', isCmf: true };
-            if (lowerId.startsWith('coltlbm')) return { theme: 'The LEGO Batman Movie S1 (71017)', isCmf: true };
-            if (lowerId.startsWith('coltlm')) return { theme: 'The LEGO Movie Series 1', isCmf: true };
-
-            const numMatch = lowerId.match(/col(\d+)/);
-            if (numMatch) {
-              const num = parseInt(numMatch[1], 10);
-              if (num >= 1 && num <= 16) return { theme: 'Series 1 (8683)', isCmf: true };
-              if (num >= 17 && num <= 32) return { theme: 'Series 2 (8684)', isCmf: true };
-              if (num >= 33 && num <= 48) return { theme: 'Series 3 (8803)', isCmf: true };
-              if (num >= 49 && num <= 64) return { theme: 'Series 4 (8804)', isCmf: true };
-              if (num >= 65 && num <= 80) return { theme: 'Series 5 (8805)', isCmf: true };
-              if (num >= 81 && num <= 96) return { theme: 'Series 6 (8827)', isCmf: true };
-              if (num >= 97 && num <= 112) return { theme: 'Series 7 (8831)', isCmf: true };
-              if (num >= 113 && num <= 128) return { theme: 'Series 8 (8833)', isCmf: true };
-              if (num >= 129 && num <= 144) return { theme: 'Series 9 (71000)', isCmf: true };
-              if (num >= 145 && num <= 161) return { theme: 'Series 10 (71001)', isCmf: true };
-              if (num >= 162 && num <= 177) return { theme: 'Series 11 (71002)', isCmf: true };
-              if (num >= 178 && num <= 193) return { theme: 'Series 12 (71007)', isCmf: true };
-              if (num >= 194 && num <= 209) return { theme: 'Series 13 (71008)', isCmf: true };
-              if (num >= 210 && num <= 225) return { theme: 'Series 14 Monsters (71010)', isCmf: true };
-              if (num >= 226 && num <= 241) return { theme: 'Series 15 (71011)', isCmf: true };
-              if (num >= 242 && num <= 257) return { theme: 'Series 16 (71013)', isCmf: true };
-              if (num >= 286 && num <= 301) return { theme: 'Series 17 (71018)', isCmf: true };
-              if (num >= 302 && num <= 318) return { theme: 'Series 18 Party (71021)', isCmf: true };
-              if (num >= 319 && num <= 334) return { theme: 'Series 19 (71025)', isCmf: true };
-              if (num >= 335 && num <= 350) return { theme: 'Series 20 (71027)', isCmf: true };
-              if (num >= 351 && num <= 362) return { theme: 'Series 21 (71029)', isCmf: true };
-              if (num >= 363 && num <= 374) return { theme: 'Series 22 (71032)', isCmf: true };
-              if (num >= 394 && num <= 405) return { theme: 'Series 23 (71034)', isCmf: true };
-              if (num >= 411 && num <= 422) return { theme: 'Series 24 (71037)', isCmf: true };
-              if (num >= 423 && num <= 434) return { theme: 'Series 25 (71045)', isCmf: true };
-              if (num >= 436 && num <= 448) return { theme: 'Series 26 Space (71046)', isCmf: true };
-              if (num >= 449 && num <= 460) return { theme: 'Series 27', isCmf: true };
-              if (num >= 461 && num <= 472) return { theme: 'Series 28', isCmf: true };
-              if (num >= 474 && num <= 485) return { theme: 'Series 29', isCmf: true };
+          // 1. Check CMF Series first
+          for (const series of CMF_SERIES_BASE) {
+            if (series.prefix.some(p => lowerId.includes(p) || lowerRbId.includes(p))) {
+              return { theme: series.name };
             }
           }
 
-          if (lowerId.startsWith('sh') || lowerId.startsWith('shg') || lowerId.startsWith('bat')) {
-            const marvelExplicitIds = ['sh1053', 'sh0250', 'sh0251', 'sh0212', 'sh0173', 'sh0177', 'sh0090', 'sh0045', 'sh0044', 'sh0038', 'sh0037', 'sh0035', 'sh0034', 'sh0033', 'sh0032', 'sh0031', 'sh0030', 'sh0029', 'sh0018', 'sh0017', 'sh0015', 'sh0014', 'sh0013', 'sh0041', 'sh0084', 'sh0602', 'sh0601', 'sh0554', 'sh0605', 'sh0068', 'sh0071', 'sh0070', 'sh0069', 'sh0066', 'sh0067', 'sh0053', 'sh0052', 'sh0054', 'sh0051', 'sh0056', 'sh0130', 'sh0448', 'sh0407', 'sh0406', 'sh0579', 'sh0186', 'sh0404', 'sh0426', 'sh0494', 'sh0571', 'sh0597a', 'sh0629', 'sh0630', 'sh0637', 'sh0675', 'sh0676', 'sh0702', 'sh0699', 'sh0701', 'sh0700', 'sh0706', 'sh0705', 'sh0694', 'sh0724', 'sh0712', 'sh0714', 'sh714', 'sh0716', 'sh0719', 'sh0713', 'sh0726', 'sh0710', 'sh0725', 'sh0717', 'sh0720', 'sh0718', 'sh0722', 'sh0715', 'sh0738', 'sh0746', 'sh0749', 'sh0751', 'sh0754', 'sh0752', 'sh0638', 'sh0698', 'sh0140', 'sh0770', 'sh0767', 'sh0765', 'sh0764', 'sh0766', 'sh0771', 'sh0763', 'sh0762', 'sh0768', 'sh0769', 'sh0779', 'sh0793', 'sh0801', 'sh0821', 'sh0826', 'sh0830', 'sh0833', 'sh0848', 'sh0840', 'sh0846', 'sh0841', 'sh0845', 'sh0856', 'sh0851', 'sh0877', 'sh0881', 'sh0907', 'sh0912', 'sh0934', 'sh0921', 'sh0920', 'sh0922', 'sh0930', 'sh0927', 'sh0931', 'sh0933', 'sh0942', 'sh0938', 'sh0953', 'sh0378', 'sh0518', 'sh0203', 'sh0812', 'sh0980', 'sh0990', 'sh0998', 'sh0995', 'sh0996', 'sh0994', 'sh1002', 'sh1025', 'sh1032', 'sh1031', 'sh1012', 'sh1051', 'sh1049', 'sh1065', 'sh1059', 'sh1100', 'sh1136', 'sh1142', 'sh1141', 'sh1158', 'sh1161', 'sh1165', 'sh1168', 'sh1169', 'sh1171', 'sh1135', 'sh1139'];
-            if (marvelExplicitIds.includes(lowerId)) return { theme: 'Marvel Super Heroes', isCmf: false };
-            return { theme: 'DC Super Heroes', isCmf: false };
-          }
-
+          // 2. Check Master Themes
           for (const theme of MASTER_THEMES_BASE) {
-            if (Array.isArray(theme.prefix)) {
-              if (theme.prefix.some(p => lowerId.startsWith(p))) return { theme: theme.name, isCmf: false };
-            } else if (theme.prefix && lowerId.startsWith(theme.prefix)) {
-              return { theme: theme.name, isCmf: false };
+            if (theme.prefix.some(p => lowerId.startsWith(p) || lowerRbId.startsWith(p) || lowerId.includes(p))) {
+              return { theme: theme.name };
             }
           }
 
-          return { theme: 'Miscellaneous', isCmf: false };
+          // 3. Keyword fallbacks based on name
+          if (lowerName.includes('star wars') || lowerName.includes('jedi') || lowerName.includes('sith') || lowerName.includes('clone trooper')) return { theme: 'Star Wars' };
+          if (lowerName.includes('spider-man') || lowerName.includes('iron man') || lowerName.includes('avengers') || lowerName.includes('marvel')) return { theme: 'Marvel Super Heroes' };
+          if (lowerName.includes('harry potter') || lowerName.includes('hogwarts') || lowerName.includes('dumbledore')) return { theme: 'Harry Potter' };
+          if (lowerName.includes('batman') || lowerName.includes('superman') || lowerName.includes('joker') || lowerName.includes('dc comics')) return { theme: 'DC Super Heroes' };
+          if (lowerName.includes('ninjago') || lowerName.includes('lloyd') || lowerName.includes('kai')) return { theme: 'Ninjago' };
+
+          return { theme: 'Miscellaneous' };
         };
 
         const estimateValue = (blId, name) => {
@@ -374,7 +311,6 @@ export default function App() {
           return 5.00;
         };
 
-        // 7. Load all minifigs master list from Supabase using pagination loop
         let allMinifigsData = [];
         let rangeStep = 1000;
         let from = 0;
@@ -404,8 +340,8 @@ export default function App() {
             const imgUrl = row.img_url || row[3] || `https://img.bricklink.com/ItemImage/MN/0/sw0001.png`;
             
             if (rbId && rbId.startsWith('fig-')) {
-              const blId = setMappingsMap[rbId] || `sw${rbId.replace('fig-', '')}`;
-              const { theme } = resolveThemeAndSeries(blId, name);
+              const blId = setMappingsMap[rbId] || setMappingsMap[rbId.replace('fig-', '')] || `sw${rbId.replace('fig-', '')}`;
+              const { theme } = resolveThemeAndSeries(blId, rbId, name);
               const figSets = figSetsMap[rbId] || [];
               const figParts = figPartsMap[rbId] || [
                 { name: 'Minifigure Torso & Head Assembly', blPartId: '973', link: `https://www.bricklink.com/v2/catalog/catalogitem.page?P=973` }
@@ -428,7 +364,6 @@ export default function App() {
             }
           });
 
-          // Custom additions
           loadedFigs.push({
             id: 'fig-donkey01',
             name: 'Donkey (Shrek)',
