@@ -374,11 +374,31 @@ export default function App() {
           return 5.00;
         };
 
-        // 7. Load minifigs master list from Supabase
-        const { data: minifigsData } = await supabase.from('minifigs').select('*');
-        if (minifigsData) {
+        // 7. Load all minifigs master list from Supabase using pagination loop
+        let allMinifigsData = [];
+        let rangeStep = 1000;
+        let from = 0;
+        let to = 999;
+        let keepFetching = true;
+
+        while (keepFetching) {
+          const { data: pageData } = await supabase.from('minifigs').select('*').range(from, to);
+          if (pageData && pageData.length > 0) {
+            allMinifigsData = [...allMinifigsData, ...pageData];
+            if (pageData.length < rangeStep) {
+              keepFetching = false;
+            } else {
+              from += rangeStep;
+              to += rangeStep;
+            }
+          } else {
+            keepFetching = false;
+          }
+        }
+
+        if (allMinifigsData.length > 0) {
           const loadedFigs = [];
-          minifigsData.forEach(row => {
+          allMinifigsData.forEach(row => {
             const rbId = row.fig_num || row[0];
             const name = row.name || row[1] || 'Unknown Minifigure';
             const imgUrl = row.img_url || row[3] || `https://img.bricklink.com/ItemImage/MN/0/sw0001.png`;
@@ -423,9 +443,7 @@ export default function App() {
             parts: [{ name: 'Donkey Body Element', blPartId: 'donkey01', link: 'https://www.bricklink.com/v2/catalog/catalogitem.page?P=donkey01' }]
           });
 
-          if (loadedFigs.length > 0) {
-            setMinifigs(loadedFigs);
-          }
+          setMinifigs(loadedFigs);
         }
       } catch (err) {
         console.log('Database cloud load error:', err);
