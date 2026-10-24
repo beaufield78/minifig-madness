@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+@keyframes subtle-bob {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
+}
+
+.animate-bob {
+  animation: subtle-bob 3s ease-in-out infinite;
+}
