@@ -19,7 +19,7 @@ const MASTER_THEMES_BASE = [
   { id: 'star-wars', name: 'Star Wars', prefix: 'sw', image: getAssetImg('Star Wars.jfif') },
   { id: 'marvel', name: 'Marvel Super Heroes', prefix: 'sh', image: getAssetImg('Marvel.jfif') },
   { id: 'harry-potter', name: 'Harry Potter', prefix: 'hp', image: getAssetImg('Harry Potter.jfif') },
-  { id: 'ninjago', name: 'Ninjago', prefix: ['nj', 'njo'], image: getAssetImg('Ninjago.jfif') },
+  { id: 'ninjago', name: 'Ninjago', prefix: 'nj', image: getAssetImg('Ninjago.jfif') },
   { id: 'dc', name: 'DC Super Heroes', prefix: ['bat', 'dc'], image: getAssetImg('DC.jfif') },
   { id: 'city', name: 'City', prefix: 'cty', image: getAssetImg('City.jfif') },
   { id: 'lord-of-the-rings', name: 'Lord of the Rings', prefix: 'lor', image: getAssetImg('Lord of the Rings.jfif') },
@@ -52,7 +52,7 @@ const MASTER_THEMES_BASE = [
   { id: 'scooby-doo', name: 'Scooby-Doo', prefix: 'scd', image: getAssetImg('Scooby-Doo.jfif') },
   { id: 'sonic', name: 'Sonic the Hedgehog', prefix: 'son', image: getAssetImg('Sonic.jfif') },
   { id: 'space', name: 'Space', prefix: 'sp', image: getAssetImg('Space.jfif') },
-  { id: 'spongebob', name: 'SpongeBob SquarePants', prefix: 'bob', image: getAssetImg('SpongeBob Squarepants.jfif') },
+  { id: 'spongebob', name: 'SpongeBob SquarePants', prefix: 'bob', image: getAssetImg('Spongebob Squarepants.jfif') },
   { id: 'stranger-things', name: 'Stranger Things', prefix: 'st', image: getAssetImg('Stranger Things.jfif') },
   { id: 'tmnt', name: 'Teenage Mutant Ninja Turtles', prefix: 'tnt', image: getAssetImg('Teenage Mutant Ninja Turtles.jfif') },
   { id: 'lego-movie', name: 'The LEGO Movie', prefix: 'tlm', image: getAssetImg('The LEGO Movie.jfif') },
@@ -143,6 +143,7 @@ export default function App() {
 
   const videoRef = useRef(null);
 
+  // Load cloud sync data from Supabase on mount
   useEffect(() => {
     async function fetchCloudData() {
       const { data, error } = await supabase.from('user_collection').select('*');
@@ -171,37 +172,46 @@ export default function App() {
     async function loadDatabaseFiles() {
       try {
         let setMappingsMap = {};
-        const { data: setMappingsData } = await supabase.from('set_mappings').select('*');
-        if (setMappingsData) {
-          setMappingsData.forEach(row => {
-            const setNum = row.set_num || row[0]; 
-            const extSystem = row.ext_system || row[1]; 
-            const extId = row.ext_id || row[2]; 
-            if (extSystem === 'BL' && setNum) {
-              setMappingsMap[setNum] = extId;
+        const setMappingsRes = await fetch(new URL('./assets/database/set_mappings.csv', import.meta.url).href);
+        if (setMappingsRes.ok) {
+          const text = await setMappingsRes.text();
+          text.split('\n').forEach((line, idx) => {
+            if (idx === 0 || line.trim().length < 3) return;
+            const row = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(val => val.replace(/^"|"$/g, '').trim());
+            if (row.length >= 3) {
+              const setNum = row[0]; 
+              const extSystem = row[1]; 
+              const extId = row[2]; 
+              if (extSystem === 'BL' && setNum.startsWith('fig-')) {
+                setMappingsMap[setNum] = extId;
+              }
             }
           });
         }
 
         let partsMap = {};
-        const { data: partsData } = await supabase.from('parts').select('*');
-        if (partsData) {
-          partsData.forEach(row => {
-            const partNum = row.part_num || row[0];
-            const partName = row.name || row[1];
-            if (partNum) partsMap[partNum] = partName;
+        const partsRes = await fetch(new URL('./assets/database/parts.csv', import.meta.url).href);
+        if (partsRes.ok) {
+          const text = await partsRes.text();
+          text.split('\n').forEach((line, idx) => {
+            if (idx === 0 || line.trim().length < 3) return;
+            const row = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(val => val.replace(/^"|"$/g, '').trim());
+            if (row.length >= 2) {
+              partsMap[row[0]] = row[1];
+            }
           });
         }
 
         let figInventoryIdMap = {};
-        let inventoryToSetMap = {};
-        const { data: inventoriesData } = await supabase.from('inventories').select('*');
-        if (inventoriesData) {
-          inventoriesData.forEach(row => {
-            const invId = row.id || row[0];
-            const setNum = row.set_num || row[2];
-            if (invId && setNum) {
-              inventoryToSetMap[invId] = setNum;
+        const inventoriesRes = await fetch(new URL('./assets/database/inventories.csv', import.meta.url).href);
+        if (inventoriesRes.ok) {
+          const text = await inventoriesRes.text();
+          text.split('\n').forEach((line, idx) => {
+            if (idx === 0 || line.trim().length < 3) return;
+            const row = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(val => val.replace(/^"|"$/g, '').trim());
+            if (row.length >= 3) {
+              const invId = row[0];
+              const setNum = row[2];
               if (setNum.startsWith('fig-')) {
                 figInventoryIdMap[setNum] = invId;
               }
@@ -209,153 +219,309 @@ export default function App() {
           });
         }
 
-        let loadedSets = [];
-        const { data: setsData } = await supabase.from('sets').select('*');
-        if (setsData) {
-          setsData.forEach(row => {
-            const setNum = row.set_num || row[0];
-            const setName = row.name || row[1] || 'Unknown Set';
-            const setYear = parseInt(row.year || row[2]) || 2020;
-            const setPieces = parseInt(row.num_parts || row[4]) || 100;
-
-            loadedSets.push({
-              number: setNum,
-              name: setName,
-              theme: 'Standard',
-              year: setYear,
-              pieces: setPieces,
-              value: 49.99,
-              image: `https://img.bricklink.com/ItemImage/SN/0/${setNum}.png`
-            });
-          });
-          if (loadedSets.length > 0) setSetsDB(loadedSets);
-        }
-
         let figPartsMap = {};
-        const { data: invPartsData } = await supabase.from('inventory_parts').select('*');
-        if (invPartsData) {
+        const invPartsRes = await fetch(new URL('./assets/database/inventory_parts.csv', import.meta.url).href);
+        if (invPartsRes.ok) {
+          const text = await invPartsRes.text();
           let invToFigMap = {};
           Object.entries(figInventoryIdMap).forEach(([figNum, invId]) => {
             invToFigMap[invId] = figNum;
           });
 
-          invPartsData.forEach(row => {
-            const invId = row.inventory_id || row[0];
-            const partNum = row.part_num || row[1];
-            const quantity = row.quantity || row[3] || '1';
-            const figNum = invToFigMap[invId];
-            if (figNum) {
-              if (!figPartsMap[figNum]) figPartsMap[figNum] = [];
-              const partName = partsMap[partNum] || `Part ${partNum}`;
-              figPartsMap[figNum].push({
-                name: `${quantity}x ${partName}`,
-                blPartId: partNum,
-                link: `https://www.bricklink.com/v2/catalog/catalogitem.page?P=${partNum}`
-              });
+          text.split('\n').forEach((line, idx) => {
+            if (idx === 0 || line.trim().length < 3) return;
+            const row = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(val => val.replace(/^"|"$/g, '').trim());
+            if (row.length >= 2) {
+              const invId = row[0];
+              const partNum = row[1];
+              const quantity = row[3] || '1';
+              const figNum = invToFigMap[invId];
+              if (figNum) {
+                if (!figPartsMap[figNum]) figPartsMap[figNum] = [];
+                const partName = partsMap[partNum] || `Part ${partNum}`;
+                figPartsMap[figNum].push({
+                  name: `${quantity}x ${partName}`,
+                  blPartId: partNum,
+                  link: `https://www.bricklink.com/v2/catalog/catalogitem.page?P=${partNum}`
+                });
+              }
             }
           });
         }
 
+        let loadedSets = [];
+        const setsRes = await fetch(new URL('./assets/database/sets.csv', import.meta.url).href);
+        if (setsRes.ok) {
+          const text = await setsRes.text();
+          text.split('\n').forEach((line, idx) => {
+            if (idx === 0 || line.trim().length < 3) return;
+            const row = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(val => val.replace(/^"|"$/g, '').trim());
+            if (row.length >= 4) {
+              const setNum = row[0];
+              const setName = row[1] || 'Unknown Set';
+              const setYear = parseInt(row[2]) || 2020;
+              const setPieces = parseInt(row[4]) || 100;
+
+              loadedSets.push({
+                number: setNum,
+                name: setName,
+                theme: 'Standard',
+                year: setYear,
+                pieces: setPieces,
+                value: 49.99,
+                image: `https://img.bricklink.com/ItemImage/SN/0/${setNum}.png`
+              });
+            }
+          });
+          if (loadedSets.length > 0) setSetsDB(loadedSets);
+        }
+
+        let inventoryToSetMap = {};
+        const invRes2 = await fetch(new URL('./assets/database/inventories.csv', import.meta.url).href);
+        if (invRes2.ok) {
+          const text = await invRes2.text();
+          text.split('\n').forEach((line, idx) => {
+            if (idx === 0 || line.trim().length < 3) return;
+            const row = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(val => val.replace(/^"|"$/g, '').trim());
+            if (row.length >= 3) inventoryToSetMap[row[0]] = row[2];
+          });
+        }
+
         let figSetsMap = {};
-        const { data: invMinifigsData } = await supabase.from('inventory_minifigs').select('*');
-        if (invMinifigsData) {
-          invMinifigsData.forEach(row => {
-            const figNum = row.fig_num || row[0];
-            const invId = row.inventory_id || row[1];
-            const setNum = inventoryToSetMap[invId];
-            if (setNum) {
-              const matchingSetObj = loadedSets.find(s => s.number === setNum);
-              if (matchingSetObj) {
-                if (!figSetsMap[figNum]) figSetsMap[figNum] = [];
-                if (!figSetsMap[figNum].some(s => s.number === setNum)) {
-                  figSetsMap[figNum].push(matchingSetObj);
+        const invMinifigsRes = await fetch(new URL('./assets/database/inventory_minifigs.csv', import.meta.url).href);
+        if (invMinifigsRes.ok) {
+          const text = await invMinifigsRes.text();
+          text.split('\n').forEach((line, idx) => {
+            if (idx === 0 || line.trim().length < 3) return;
+            const row = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(val => val.replace(/^"|"$/g, '').trim());
+            if (row.length >= 2) {
+              const figNum = row[0];
+              const invId = row[1];
+              const setNum = inventoryToSetMap[invId];
+              if (setNum) {
+                const matchingSetObj = loadedSets.find(s => s.number === setNum);
+                if (matchingSetObj) {
+                  if (!figSetsMap[figNum]) figSetsMap[figNum] = [];
+                  if (!figSetsMap[figNum].some(s => s.number === setNum)) {
+                    figSetsMap[figNum].push(matchingSetObj);
+                  }
                 }
               }
             }
           });
         }
 
-        const resolveThemeAndSeries = (blId, rbId, figName) => {
+        const resolveThemeAndSeries = (blId, figName) => {
           const lowerId = (blId || '').toLowerCase();
-          const lowerRbId = (rbId || '').toLowerCase();
           const lowerName = (figName || '').toLowerCase();
 
-          // 1. Strict check: ONLY assign Star Wars if explicitly Star Wars
-          const isRealStarWars = lowerId.startsWith('sw') || 
-            lowerName.includes('star wars') || 
-            lowerName.includes('jedi') || 
-            lowerName.includes('sith') || 
-            lowerName.includes('clone trooper') || 
-            lowerName.includes('darth') || 
-            lowerName.includes('mandalorian') ||
-            lowerName.includes('lightsaber');
-
-          if (isRealStarWars) {
-            return { theme: 'Star Wars' };
+          if (lowerId === 'shr001') {
+            return { theme: 'Miscellaneous', isCmf: false };
+          }
+          if (lowerId.startsWith('shell')) {
+            return { theme: 'Miscellaneous', isCmf: false };
           }
 
-          // 2. Keyword checks for other themes
-          if (lowerName.includes('spider-man') || lowerName.includes('iron man') || lowerName.includes('avengers') || lowerName.includes('thor') || lowerName.includes('captain america') || lowerName.includes('thanos') || lowerName.includes('marvel')) return { theme: 'Marvel Super Heroes' };
-          if (lowerName.includes('harry potter') || lowerName.includes('hogwarts') || lowerName.includes('dumbledore') || lowerName.includes('hermione') || lowerName.includes('ron weasley')) return { theme: 'Harry Potter' };
-          if (lowerName.includes('batman') || lowerName.includes('superman') || lowerName.includes('joker') || lowerName.includes('wonder woman') || lowerName.includes('harley quinn') || lowerName.includes('dc comics')) return { theme: 'DC Super Heroes' };
-          if (lowerName.includes('ninjago') || lowerName.includes('lloyd') || lowerName.includes('kai') || lowerName.includes('jay') || lowerName.includes('cole') || lowerName.includes('nyan')) return { theme: 'Ninjago' };
-          if (lowerName.includes('minions') || lowerName.includes('gru')) return { theme: 'Minions' };
-          if (lowerName.includes('minecraft') || lowerName.includes('steve') || lowerName.includes('creeper')) return { theme: 'Minecraft' };
-          if (lowerName.includes('sonic') || lowerName.includes('tails') || lowerName.includes('knuckles')) return { theme: 'Sonic the Hedgehog' };
-          if (lowerName.includes('scooby') || lowerName.includes('shaggy') || lowerName.includes('velma')) return { theme: 'Scooby-Doo' };
+          if (lowerId.startsWith('tlm')) {
+            const numMatch = lowerId.match(/tlm(\d+)/);
+            if (numMatch) {
+              const num = parseInt(numMatch[1], 10);
+              if (num >= 1 && num <= 16) return { theme: 'The LEGO Movie Series 1', isCmf: true };
+              if (num >= 148 && num <= 167) return { theme: 'The LEGO Movie 2 (71023)', isCmf: true };
+            }
+            return { theme: 'The LEGO Movie', isCmf: false };
+          }
 
-          // 3. Prefix matching against Master Themes
-          for (const theme of MASTER_THEMES_BASE) {
-            if (Array.isArray(theme.prefix)) {
-              if (theme.prefix.some(p => lowerId.startsWith(p) || lowerRbId.startsWith(p))) return { theme: theme.name };
-            } else if (theme.prefix && (lowerId.startsWith(theme.prefix) || lowerRbId.startsWith(theme.prefix))) {
-              return { theme: theme.name };
+          if (lowerId.startsWith('gfb')) {
+            const numMatch = lowerId.match(/gfb(\d+)/);
+            if (numMatch) {
+              const num = parseInt(numMatch[1], 10);
+              if (num >= 1 && num <= 16) return { theme: 'German Football (71014)', isCmf: true };
             }
           }
 
-          return { theme: 'Miscellaneous' };
+          if (lowerId.startsWith('col')) {
+            if (lowerId.startsWith('colshr') || lowerId === 'donkey01') return { theme: 'Shrek', isCmf: true };
+            if (lowerId.startsWith('coluni')) return { theme: 'Unikitty!', isCmf: true };
+            if (lowerId.startsWith('coldnd')) return { theme: 'Dungeons & Dragons (71047)', isCmf: true };
+            if (lowerId.startsWith('colspi')) return { theme: 'Spider-Man: Across the Spider-Verse', isCmf: true };
+            if (lowerId.startsWith('coltlnm')) return { theme: 'The LEGO Ninjago Movie', isCmf: true };
+            if (lowerId.startsWith('colhp')) return { theme: 'Harry Potter S1 (71022)', isCmf: true };
+            if (lowerId.startsWith('colmar')) return { theme: 'Marvel Series 1 (71031)', isCmf: true };
+            if (lowerId.startsWith('colsh')) return { theme: 'DC Super Heroes (71026)', isCmf: true };
+            if (lowerId.startsWith('coltm') || lowerId.startsWith('colmup')) return { theme: 'The Muppets (71033)', isCmf: true };
+            if (lowerId.startsWith('coltlbm')) return { theme: 'The LEGO Batman Movie S1 (71017)', isCmf: true };
+            if (lowerId.startsWith('coltlm')) return { theme: 'The LEGO Movie Series 1', isCmf: true };
+
+            const numMatch = lowerId.match(/col(\d+)/);
+            if (numMatch) {
+              const num = parseInt(numMatch[1], 10);
+              if (num >= 1 && num <= 16) return { theme: 'Series 1 (8683)', isCmf: true };
+              if (num >= 17 && num <= 32) return { theme: 'Series 2 (8684)', isCmf: true };
+              if (num >= 33 && num <= 48) return { theme: 'Series 3 (8803)', isCmf: true };
+              if (num >= 49 && num <= 64) return { theme: 'Series 4 (8804)', isCmf: true };
+              if (num >= 65 && num <= 80) return { theme: 'Series 5 (8805)', isCmf: true };
+              if (num >= 81 && num <= 96) return { theme: 'Series 6 (8827)', isCmf: true };
+              if (num >= 97 && num <= 112) return { theme: 'Series 7 (8831)', isCmf: true };
+              if (num >= 113 && num <= 128) return { theme: 'Series 8 (8833)', isCmf: true };
+              if (num >= 129 && num <= 144) return { theme: 'Series 9 (71000)', isCmf: true };
+              if (num >= 145 && num <= 161) return { theme: 'Series 10 (71001)', isCmf: true };
+              if (num >= 162 && num <= 177) return { theme: 'Series 11 (71002)', isCmf: true };
+              if (num >= 178 && num <= 193) return { theme: 'Series 12 (71007)', isCmf: true };
+              if (num >= 194 && num <= 209) return { theme: 'Series 13 (71008)', isCmf: true };
+              if (num >= 210 && num <= 225) return { theme: 'Series 14 Monsters (71010)', isCmf: true };
+              if (num >= 226 && num <= 241) return { theme: 'Series 15 (71011)', isCmf: true };
+              if (num >= 242 && num <= 257) return { theme: 'Series 16 (71013)', isCmf: true };
+              if (num >= 286 && num <= 301) return { theme: 'Series 17 (71018)', isCmf: true };
+              if (num >= 302 && num <= 318) return { theme: 'Series 18 Party (71021)', isCmf: true };
+              if (num >= 319 && num <= 334) return { theme: 'Series 19 (71025)', isCmf: true };
+              if (num >= 335 && num <= 350) return { theme: 'Series 20 (71027)', isCmf: true };
+              if (num >= 351 && num <= 362) return { theme: 'Series 21 (71029)', isCmf: true };
+              if (num >= 363 && num <= 374) return { theme: 'Series 22 (71032)', isCmf: true };
+              if (num >= 394 && num <= 405) return { theme: 'Series 23 (71034)', isCmf: true };
+              if (num >= 411 && num <= 422) return { theme: 'Series 24 (71037)', isCmf: true };
+              if (num >= 423 && num <= 434) return { theme: 'Series 25 (71045)', isCmf: true };
+              if (num >= 436 && num <= 448) return { theme: 'Series 26 Space (71046)', isCmf: true };
+              if (num >= 449 && num <= 460) return { theme: 'Series 27', isCmf: true };
+              if (num >= 461 && num <= 472) return { theme: 'Series 28', isCmf: true };
+              if (num >= 474 && num <= 485) return { theme: 'Series 29', isCmf: true };
+            }
+          }
+
+          const dimExplicitIds = ['sh002', 'sh012', 'sh095', 'sh101', 'sh143', 'sh146', 'sh218', 'tlm060', 'tlm061', 'tlm070', 'tlm099', 'njo116', 'njo140', 'njo144', 'njo156', 'njo157', 'njo161', 'loc099', 'loc104', 'loc109', 'lor037'];
+          if (lowerId.startsWith('dim') || dimExplicitIds.includes(lowerId)) {
+            const numMatch = lowerId.match(/dim(\d+)/);
+            if (numMatch) {
+              const num = parseInt(numMatch[1], 10);
+              if (num >= 1 && num <= 54) return { theme: 'LEGO Dimensions', isCmf: false };
+            }
+            if (dimExplicitIds.includes(lowerId)) return { theme: 'LEGO Dimensions', isCmf: false };
+          }
+
+          const mofExplicitIds = ['gen043', 'gen044', 'gen045'];
+          if (lowerId.startsWith('mof') || mofExplicitIds.includes(lowerId)) {
+            return { theme: 'Monster Fighters', isCmf: false };
+          }
+
+          const scoobyExplicitIds = ['scooby01', 'scooby02', 'scooby03', 'scooby04'];
+          const scoobyParts = ['21042pb01c03', '20690pb01c03', '20690pb01c02', '21042pb01c02', '20690pb01c01', '21042pb01c01'];
+          if (lowerId.startsWith('scd') || scoobyExplicitIds.includes(lowerId) || scoobyParts.some(p => lowerId.includes(p) || lowerName.includes(p))) {
+            return { theme: 'Scooby-Doo', isCmf: false };
+          }
+
+          if (lowerId.startsWith('sh') || lowerId.startsWith('shg') || lowerId.startsWith('bat')) {
+            const marvelExplicitIds = [
+              'sh1053', 'sh0250', 'sh0251', 'sh0212', 'sh0173', 'sh0177', 
+              'sh0090', 'sh0045', 'sh0044', 'sh0038', 'sh0037', 'sh0035', 'sh0034', 
+              'sh0033', 'sh0032', 'sh0031', 'sh0030', 'sh0029', 'sh0018', 'sh0017', 
+              'sh0015', 'sh0014', 'sh0013', 'sh0041', 'sh0084', 'sh0602', 'sh0601', 
+              'sh0554', 'sh0605', 'sh0068', 'sh0071', 'sh0070', 'sh0069', 'sh0066', 
+              'sh0067', 'sh0053', 'sh0052', 'sh0054', 'sh0051', 'sh0056', 'sh0130', 
+              'sh0448', 'sh0407', 'sh0406', 'sh0579', 'sh0186', 'sh0404', 'sh0426', 
+              'sh0494', 'sh0571', 'sh0597a', 'sh0629', 'sh0630', 'sh0637', 'sh0675', 
+              'sh0676', 'sh0702', 'sh0699', 'sh0701', 'sh0700', 'sh0706', 'sh0705', 
+              'sh0694', 'sh0724', 'sh0712', 'sh0714', 'sh714', 'sh0716', 'sh0719', 
+              'sh0713', 'sh0726', 'sh0710', 'sh0725', 'sh0717', 'sh0720', 'sh0718', 
+              'sh0722', 'sh0715', 'sh0738', 'sh0746', 'sh0749', 'sh0751', 'sh0754', 
+              'sh0752', 'sh0638', 'sh0698', 'sh0140', 'sh0770', 'sh0767', 'sh0765', 
+              'sh0764', 'sh0766', 'sh0771', 'sh0763', 'sh0762', 'sh0768', 'sh0769', 
+              'sh0779', 'sh0793', 'sh0801', 'sh0821', 'sh0826', 'sh0830', 'sh0833', 
+              'sh0848', 'sh0840', 'sh0846', 'sh0841', 'sh0845', 'sh0856', 'sh0851', 
+              'sh0877', 'sh0881', 'sh0907', 'sh0912', 'sh0934', 'sh0921', 'sh0920', 
+              'sh0922', 'sh0930', 'sh0927', 'sh0931', 'sh0933', 'sh0942', 'sh0938', 
+              'sh0953', 'sh0378', 'sh0518', 'sh0203', 'sh0812', 'sh0980', 'sh0990', 
+              'sh0998', 'sh0995', 'sh0996', 'sh0994', 'sh1002', 'sh1025', 'sh1032', 
+              'sh1031', 'sh1012', 'sh1051', 'sh1049', 'sh1065', 'sh1059', 'sh1100', 
+              'sh1136', 'sh1142', 'sh1141', 'sh1158', 'sh1161', 'sh1165', 'sh1168', 
+              'sh1169', 'sh1171', 'sh1135', 'sh1139'
+            ];
+            const marvelKeywords = [
+              'spider-man', 'spider man', 'captain america', 'iron man', 'thor', 
+              'hulk', 'avengers', 'wolverine', 'deadpool', 'magneto', 'loki', 
+              'hawkeye', 'jean grey', 'rocket', 'thanos', 'venom', 'carnage', 
+              'black panther', 'doctor strange', 'ultron', 'vision', 'ant-man', 
+              'star-lord', 'groot', 'gamora', 'drax', 'collector', 'valkyrie', 
+              'hela', 'chitauri', 'iron fist', 'iron patriot', 'ned leeds', 
+              'maria hill', 'nick fury', 'captain marvel', 'pepper potts', 
+              'extremis', 'mandarin', 'tony stark', 'war machine', 'aldrich killian', 
+              'beetle', 'dr. doom', 'j jonah jameson', 'nova', 'scarlet witch', 
+              'iron legion', 'sandman', 'rhino', 'iron spider', 'shield agent', 
+              'beast boy', 'yellowjacket', 'hydra', 'iron skull', 'winter soldier', 
+              'quicksilver', 'baron von strucker', 'agent 13', 'crossbones', 
+              'falcon', 'hyperion', 'green goblin', 'kraven', 'scarlet spider', 
+              'scorpion', 'spider-girl', 'aunt may', 'ancient one', 'karl mordo', 
+              'captain stacy', 'dr. octopus', 'white tiger', 'vulture', 'ghost rider', 
+              'hobgoblin', 'mantis', 'taserface', 'justin hammer', 'agent coulson', 
+              'super-adaptoid', 'ms. marvel', 'yondu', 'nebula', 'grandmaster',
+              'cyclops', 'storm', 'sakaaran', 'ronan', 'modok', 'taskmaster', 
+              'red skull', 'power man', 'proxima midnight', 'outrider', 'shuri', 
+              'corvus glaive', 'ulysses klaue', 'erik killmonger', 'nakia', 
+              'okoye', 'talon', 'ebony maw', 'cull obsidian', 'ghost-spider', 
+              'spider-gwen', 'dock worker', 'happy hogan', 'mysterio', 'mj', 
+              'michelle jones', 'mary jane', 'hydro-man', 'firefighter', 'talos', 
+              'aim agent', 'electro', 'shocker', 'maria rambeau', 'yelena belova', 
+              'red guardian', 'razor fist', 'katy', 'wenwu', 'shang-chi', 'xialing', 
+              'death dealer', 'miles morales', 'daredevil', 'firestar', 'peter parker', 
+              'robbie robertson', 'ben urich', 'blade', 'betty brant', 'amber grant', 
+              'ron barney', 'taxi driver bernie', 'gwen stacy', 'punisher', 'black cat', 
+              'obadiah stone', 'watcher', 'captain carter', 'steve rogers', 'miek', 'korg',
+              'spider-ham', 'pork grind', 'spider-woman', 'phastos', 'makkari', 'sersi', 
+              'ikaris', 'thena', 'druig', 'kingo', 'ajak', 'gilgamesh', 'sprite', 
+              'wong', 'america chavez', 'whiplash', 'sinister strange', 'dead strange', 
+              'ironheart', 'attuma', "m'baku", 'namor', 'morbius', 'adam warlock', 
+              'photon', 'kevin feige', 'helen cho', 'alexander pierce', 'erik selvig', 
+              'wasp', 'dum-e', 'rogue', 'lizard', 'zola', 'ayesha', 'ghost', 'gorr', 
+              'fire demon', 'charles xavier', 'iceman', 'bishop', 'gambit', 
+              'ruth bat-seraph', 'trapster', 'spot', 'jefferson', 'the thing', 
+              'reed richards', 'norman osborn', 'boomerang', 'dodc guard', 'tombstone', 
+              'doctor doom', 'kurt wagner', 'nightcrawler', 'raven darkholme', 'mystique', 
+              'robert reynolds', 'sentry', 'tarantula', 'hotdog vendor'
+            ];
+            
+            if (marvelExplicitIds.includes(lowerId) || marvelKeywords.some(kw => lowerId.includes(kw) || lowerName.includes(kw))) {
+              return { theme: 'Marvel Super Heroes', isCmf: false };
+            }
+            return { theme: 'DC Super Heroes', isCmf: false };
+          }
+
+          for (const theme of MASTER_THEMES_BASE) {
+            if (Array.isArray(theme.prefix)) {
+              if (theme.prefix.some(p => lowerId.startsWith(p))) {
+                return { theme: theme.name, isCmf: false };
+              }
+            } else if (theme.prefix && lowerId.startsWith(theme.prefix)) {
+              return { theme: theme.name, isCmf: false };
+            }
+          }
+
+          return { theme: 'Miscellaneous', isCmf: false };
         };
 
+        // Smart Valuation Estimator
         const estimateValue = (blId, name) => {
           const id = (blId || '').toLowerCase();
           const nm = (name || '').toLowerCase();
-          if (id.includes('boba') || id.includes('rex') || nm.includes('boba fett')) return 45.00;
+          if (id.includes('boba') || id.includes('rex') || id.includes('jango') || id.includes('vader') || nm.includes('boba fett')) return 45.00;
           if (id.startsWith('sw') && parseInt(id.replace('sw','')) < 50) return 25.00;
+          if (nm.includes('gold') || nm.includes('chrome') || nm.includes('exclusive')) return 60.00;
           if (id.startsWith('col') || id.startsWith('sh') || id.startsWith('hp')) return 8.50;
           return 5.00;
         };
 
-        let allMinifigsData = [];
-        let rangeStep = 1000;
-        let from = 0;
-        let to = 999;
-        let keepFetching = true;
-
-        while (keepFetching) {
-          const { data: pageData } = await supabase.from('minifigs').select('*').range(from, to);
-          if (pageData && pageData.length > 0) {
-            allMinifigsData = [...allMinifigsData, ...pageData];
-            if (pageData.length < rangeStep) {
-              keepFetching = false;
-            } else {
-              from += rangeStep;
-              to += rangeStep;
-            }
-          } else {
-            keepFetching = false;
-          }
-        }
-
-        if (allMinifigsData.length > 0) {
+        const minifigsRes = await fetch(new URL('./assets/database/minifigs.csv', import.meta.url).href);
+        if (minifigsRes.ok) {
+          const text = await minifigsRes.text();
           const loadedFigs = [];
-          allMinifigsData.forEach(row => {
-            const rbId = row.fig_num || row[0];
-            const name = row.name || row[1] || 'Unknown Minifigure';
-            const imgUrl = row.img_url || row[3] || `https://img.bricklink.com/ItemImage/MN/0/sw0001.png`;
-            
-            if (rbId && rbId.startsWith('fig-')) {
+          text.split('\n').forEach((line, idx) => {
+            if (idx === 0 || line.trim().length < 3) return;
+            const row = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(val => val.replace(/^"|"$/g, '').trim());
+            if (row.length >= 2 && row[0].startsWith('fig-')) {
+              const rbId = row[0];
+              const name = row[1] || 'Unknown Minifigure';
+              const imgUrl = row[3] || `https://img.bricklink.com/ItemImage/MN/0/sw0001.png`;
+              
               const blId = setMappingsMap[rbId] || `sw${rbId.replace('fig-', '')}`;
-              const { theme } = resolveThemeAndSeries(blId, rbId, name);
+              const { theme } = resolveThemeAndSeries(blId, name);
               const figSets = figSetsMap[rbId] || [];
               const figParts = figPartsMap[rbId] || [
                 { name: 'Minifigure Torso & Head Assembly', blPartId: '973', link: `https://www.bricklink.com/v2/catalog/catalogitem.page?P=973` }
@@ -392,10 +558,51 @@ export default function App() {
             parts: [{ name: 'Donkey Body Element', blPartId: 'donkey01', link: 'https://www.bricklink.com/v2/catalog/catalogitem.page?P=donkey01' }]
           });
 
-          setMinifigs(loadedFigs);
+          loadedFigs.push({
+            id: 'fig-shr001',
+            name: 'Puss in Boots (Miscellaneous)',
+            blId: 'shr001',
+            rbId: 'fig-shr001',
+            theme: 'Miscellaneous',
+            year: 2026,
+            value: 4.50,
+            owned: false,
+            image: 'https://img.bricklink.com/ItemImage/PN/147/shr001.png',
+            sets: [],
+            parts: [{ name: 'Puss in Boots Hat & Head Assembly', blPartId: 'shr001', link: 'https://www.bricklink.com/v2/catalog/catalogitem.page?P=shr001' }]
+          });
+
+          const scoobyPartsList = [
+            { id: '21042pb01c03', name: 'Scooby-Doo (Walking, Tongue Licking Chops)' },
+            { id: '20690pb01c03', name: 'Scooby-Doo (Sitting, Tongue Licking Chops)' },
+            { id: '20690pb01c02', name: 'Scooby-Doo (Sitting, Chattering Teeth)' },
+            { id: '21042pb01c02', name: 'Scooby-Doo (Walking, Chattering Teeth)' },
+            { id: '20690pb01c01', name: 'Scooby-Doo (Sitting, Pilot Goggles)' },
+            { id: '21042pb01c01', name: 'Scooby-Doo (Walking, Pilot Goggles)' }
+          ];
+
+          scoobyPartsList.forEach((sp, idx) => {
+            loadedFigs.push({
+              id: `fig-scooby-${idx}`,
+              name: sp.name,
+              blId: sp.id,
+              rbId: `fig-scooby-${idx}`,
+              theme: 'Scooby-Doo',
+              year: 2015,
+              value: 6.00,
+              owned: false,
+              image: `https://img.bricklink.com/ItemImage/PN/147/${sp.id}.png`,
+              sets: [],
+              parts: [{ name: sp.name, blPartId: sp.id, link: `https://www.bricklink.com/v2/catalog/catalogitem.page?P=${sp.id}` }]
+            });
+          });
+
+          if (loadedFigs.length > 0) {
+            setMinifigs(loadedFigs);
+          }
         }
       } catch (err) {
-        console.log('Database cloud load error:', err);
+        console.log('Database auto-load error:', err);
       }
     }
     loadDatabaseFiles();
@@ -724,6 +931,7 @@ export default function App() {
             </button>
           </div>
 
+          {/* 3 Columns Grid View */}
           <div className="flex-1 overflow-y-auto grid grid-cols-3 gap-2.5 pb-4">
             {minifigs
               .filter(fig => fig.theme === selectedCategory.name)
